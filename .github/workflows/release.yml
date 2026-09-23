@@ -84,6 +84,12 @@ jobs:
       - run: npm install --no-audit --no-fund --ignore-scripts
       - run: npm test
 
+      # The stricter pass, on the tagged tree: the CHANGELOG's newest section must be
+      # this version, and nothing may still sit under [Unreleased] — whatever is there
+      # ships in this tarball without being announced, which is how 0.2.0 came to
+      # contain the Codex prices while listing them as unreleased.
+      - run: node bin/transcriptmeter.mjs check --release
+
       # No token: OIDC. Provenance is generated automatically for a public
       # package published this way, so --provenance is not passed.
       #

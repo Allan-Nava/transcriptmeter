@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { kindOf, loadSessions } from '../bin/lib/discover.mjs'
+import { changelogFaults } from '../bin/lib/changelog.mjs'
 import { aggregate, runs, sessionMetrics, weekOf, weekly } from '../bin/lib/metrics.mjs'
 import { costOf, priceFor } from '../bin/lib/prices.mjs'
 import { commandPrefix, isMachineTurn } from '../bin/lib/readers/common.mjs'
@@ -180,6 +181,23 @@ test('weeks: Monday in UTC, one row each, and nothing to trend is said rather th
   assert.deepEqual(weeks.map((w) => [w.week, w.sessions]), [['2026-09-14', 1], ['2026-09-21', 2]], 'oldest first; the session without turns is not trended')
   assert.match(renderWeeks(weeks), /2 weeks, 2026-09-14 to 2026-09-21/)
   assert.match(renderWeeks([]), /No week has a session that reached the API/)
+})
+
+// Three releases in one day described themselves wrongly and nothing caught it, because
+// the only automated check was that the tag and package.json agree on a version.
+test('changelogFaults: the newest section is the version, and a tag ships nothing unannounced', () => {
+  const log = (unreleased, ...versions) => `# Changelog\n\n## [Unreleased]\n${unreleased}\n${versions.map((v) => `## [${v}] — 2026-09-23\n\nnotes\n`).join('\n')}`
+
+  assert.deepEqual(changelogFaults(log('', '0.2.0', '0.1.0'), '0.2.0'), [])
+  assert.match(changelogFaults(log('', '0.1.0'), '0.2.0')[0], /newest section is 0\.1\.0, but package\.json says 0\.2\.0/)
+  assert.match(changelogFaults('# Changelog\n\n## [1.0.0]\n', '1.0.0')[0], /needs an \[Unreleased\] section/)
+  assert.match(changelogFaults('# Changelog\n\n## [Unreleased]\n', '1.0.0')[0], /no released section/)
+
+  // Ordinary development leaves entries under [Unreleased]; only a tag objects to them.
+  const pending = log('\n### Added\n- a thing nobody announced\n', '0.2.0')
+  assert.deepEqual(changelogFaults(pending, '0.2.0'), [])
+  assert.match(changelogFaults(pending, '0.2.0', { release: true })[0], /at a tag they ship without being announced/)
+  assert.deepEqual(changelogFaults(log('', '0.2.0'), '0.2.0', { release: true }), [])
 })
 
 test('CLI: summary, sessions, session, tools, --json, --since, --harness, --no-subagents, check', () => {

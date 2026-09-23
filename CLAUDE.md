@@ -30,6 +30,9 @@ bin/lib/readers/common.mjs   toolResultText, commandPrefix (a program name and i
                           the harness wrote, by shape rather than by a list of tags)
 bin/lib/discover.mjs      roots, discovery, which reader per root
 bin/lib/args.mjs          the --since parser, pure and tested
+bin/lib/changelog.mjs     what `check` reads the CHANGELOG for: the newest section must
+                          be package.json's version, and at a tag (`check --release`)
+                          [Unreleased] must be empty
 bin/lib/metrics.mjs       sessionMetrics (KPIs, cost, misses and their causes, switches)
                           and aggregate; MISS_CAUSES is the order they are asked in
 bin/lib/prices.mjs        the dated list-price table; PRICES_DATE is load-bearing
@@ -115,6 +118,7 @@ npm run backlog && npm run build:site
 ## Conventions
 
 - BACKLOG.md first: every idea is a `TM-n` item; shipped items say `ver=`.
-- CHANGELOG under `[Unreleased]` in the same pull request as the change.
+- CHANGELOG under `[Unreleased]` in the same pull request as the change — and cut into
+  the release's own section before the tag, which `check --release` enforces.
 - Prose: British-leaning spelling, em-dashes, no marketing filler, no decorative emoji.
 - Zero runtime dependencies, Node 18+, no build step, no `postinstall`.
