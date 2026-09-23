@@ -5,6 +5,12 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-09-23
+
+Three ways of reading the same transcripts that 0.1.0 did not have — a run, a week, and
+the cause of every cache miss — and two counts that were wrong, one of which printed more
+than this tool is allowed to print.
+
 ### Added
 - `runs`: the sessions of one `thoughts/<task>` QRSPI run, grouped by phase and ending on
   the whole run — KPI 1 as the peak p50, KPI 3 as the run's tokens, KPI 4 as cache. The
@@ -34,6 +40,9 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
   was counted as a human message — one per compaction (TM-9).
 
 ## [0.1.0] — 2026-09-23
+
+Tagged, and not on the registry: the trusted publisher was not configured on npmjs.com
+when its tag was pushed, so the publish could not authenticate. 0.2.0 supersedes it.
 
 The first release worth installing. What changed since 0.0.1 is above all TM-8: the
 numbers were compared against sources that are not this tool, and two of them were wrong.

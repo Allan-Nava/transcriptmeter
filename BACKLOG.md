@@ -66,7 +66,7 @@ and one Codex session's with Codex's own `/status`, and the differences explaine
   past the TTL its write asked for, a tool the session had not used before — or unknown,
   counted rather than guessed. On the author's machine 222 of 278 misses are an expired
   entry, which is idle time priced as a full re-read.
-  <!-- tm: prio=med size=M labels=metrics ver=main -->
+  <!-- tm: prio=med size=M labels=metrics ver=0.2.0 -->
 - [x] **TM-10 — First release 0.1.0**: bootstrap publish by hand (npm forbids configuring
   a trusted publisher for a package that does not exist), then the trusted publisher on
   npmjs.com and the tag. <!-- tm: prio=med size=S labels=release ver=0.1.0 -->
@@ -97,13 +97,13 @@ and one Codex session's with Codex's own `/status`, and the differences explaine
   the first prompt names, orders by phase and ends on the whole run — KPI 1 as peak p50,
   KPI 3 as the run's tokens, KPI 4 as cache. Both readers take the task id and the phase
   from the first prompt, keeping the identifier and never the prompt.
-  <!-- tm: prio=med size=M labels=metrics,enhancement ver=main -->
+  <!-- tm: prio=med size=M labels=metrics,enhancement ver=0.2.0 -->
 - [ ] **TM-12 — Codex prices**: a dated table once a citable source exists; until then
   `--prices`. <!-- tm: prio=low size=S labels=metrics -->
 - [x] **TM-13 — A weekly trend**: `weeks`, one row per Monday-to-Sunday week in UTC —
   sessions, turns, tokens, cache hit ratio, peak p50, misses and the cause most of them
   were pinned on, cost. Sessions that never reached the API are left out: they have no
-  number to trend. <!-- tm: prio=low size=M labels=enhancement ver=main -->
+  number to trend. <!-- tm: prio=low size=M labels=enhancement ver=0.2.0 -->
 
 ## v0.3.0 — What the cross-check left open <!-- ms: phase=later -->
 
@@ -121,10 +121,10 @@ lives here.
   brace, an absolute path, a fragment of somebody's shell line. 2,450 of 28,388 on the
   author's machine, some of them printing a path, which rule 1 does not allow. Now: the
   noise is skipped, a path is cut to its last segment, and what still is not a program
-  name is `?`. <!-- tm: prio=med size=S labels=metrics ver=main -->
+  name is `?`. <!-- tm: prio=med size=S labels=metrics ver=0.2.0 -->
 - [x] **TM-19 — A machine turn is a shape, not a list**: the list had already drifted
   when it was written — `<bash-input>`, `<local-command-caveat>` and `<create-pr-command>`
   were missing, 62 turns counted as people. A turn whose whole content is one element,
   opening on a hyphenated tag and closing on it, is the harness: 224 of the 280 tagged
   turns. The named list stays for the ones that open with a tag and do not close on it,
-  and a pasted `<html>` is still a person. <!-- tm: prio=med size=S labels=reader ver=main -->
+  and a pasted `<html>` is still a person. <!-- tm: prio=med size=S labels=reader ver=0.2.0 -->
