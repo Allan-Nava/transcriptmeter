@@ -7,8 +7,8 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 
 ## [0.1.0] — 2026-09-23
 
-The first published release. What changed since 0.0.1 is above all TM-8: the numbers were
-compared against sources that are not this tool, and two of them were wrong.
+The first release worth installing. What changed since 0.0.1 is above all TM-8: the
+numbers were compared against sources that are not this tool, and two of them were wrong.
 
 ### Added
 - `--since` refuses a value it cannot read (exit 2) instead of silently dropping every
@@ -58,7 +58,10 @@ compared against sources that are not this tool, and two of them were wrong.
 
 ## [0.0.1] — 2026-09-23
 
-Not published: the first working CLI, measured on one machine.
+Published to bootstrap the trusted publisher — npm will not configure one for a package
+that does not exist — from the tree as it stood before TM-8. **Do not use it**: its
+`userMessages` is 0 for every real session and it never recognises a QRSPI phase, because
+it reads a human turn's `content` only as a block list. Both are fixed in 0.1.0.
 
 ### Added
 - Readers for Claude Code transcripts (usage once per `requestId`, cache classes incl. the
