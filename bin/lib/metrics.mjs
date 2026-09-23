@@ -62,14 +62,16 @@ export function sessionMetrics(s, custom = {}) {
     toolChars,
     tools: s.tools,
     commands: s.commands,
-    over8k: s.over8k,
+    overCap: s.overCap,
   }
 }
 
-const q = (xs, p) => (xs.length ? [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.floor(p * xs.length))] : null)
+// Nearest-rank: the smallest value at or above the p-th of the sorted sample, so the
+// p50 of two sessions is the lower of the two rather than the higher.
+const q = (xs, p) => (xs.length ? [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.max(0, Math.ceil(p * xs.length) - 1))] : null)
 
 export function aggregate(ms) {
-  const a = { sessions: ms.length, subagents: ms.filter((m) => m.subagent).length, harnesses: {}, turns: 0, tokens: { input: 0, cacheRead: 0, write5m: 0, write1h: 0, output: 0, total: 0 }, cost: 0, pricedSessions: 0, unpriced: new Set(), peaks: [], misses: 0, modelSwitches: 0, compactions: 0, tools: {}, commands: {}, over8k: 0, phases: {} }
+  const a = { sessions: ms.length, subagents: ms.filter((m) => m.subagent).length, harnesses: {}, turns: 0, tokens: { input: 0, cacheRead: 0, write5m: 0, write1h: 0, output: 0, total: 0 }, cost: 0, pricedSessions: 0, unpriced: new Set(), peaks: [], misses: 0, modelSwitches: 0, compactions: 0, tools: {}, commands: {}, overCap: 0, phases: {} }
   for (const m of ms) {
     a.harnesses[m.harness] = (a.harnesses[m.harness] ?? 0) + 1
     a.turns += m.turns
@@ -83,7 +85,7 @@ export function aggregate(ms) {
     a.misses += m.misses
     a.modelSwitches += m.modelSwitches
     a.compactions += m.compactions
-    a.over8k += m.over8k
+    a.overCap += m.overCap
     if (m.phase) a.phases[m.phase] = (a.phases[m.phase] ?? 0) + 1
     for (const [t, v] of Object.entries(m.tools)) {
       const x = (a.tools[t] ??= { n: 0, chars: 0 })

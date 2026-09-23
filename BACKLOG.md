@@ -65,6 +65,26 @@ and one Codex session's with Codex's own `/status`, and the differences explaine
   <!-- tm: prio=med size=M labels=metrics -->
 - [ ] **TM-10 — First release 0.1.0**: bootstrap publish, trusted publisher, tag — after
   TM-8. <!-- tm: prio=med size=S labels=release -->
+- [x] **TM-14 — Clear the hookgate leftovers**: the repo was started from hookgate's
+  scaffolding and kept its wordmark (`hook`·`gate` in the site header), its "Claude Code
+  plugin" eyebrow, a hooks inventory read off a `hooks/hooks.json` that does not exist
+  here, an `og:image` pointing at a social card nobody had rendered, and release notes
+  telling the reader to `/plugin install` and to set `TYPESAFE_API_KEY`. The site now
+  derives its wordmark and headline from the README's H1, and the card is rendered from
+  `assets/social-preview.html`. <!-- tm: prio=high size=S labels=docs,project ver=main -->
+- [x] **TM-15 — `--cap` is the cap that is counted**: the readers counted results over a
+  hard-coded 8,000 characters while `tools --cap N` only relabelled that count, so
+  `--cap 2000` printed the 8,000 figure under a 2,000 heading, and the line called every
+  tool result a shell result. The cap is now an argument to `loadSessions` and the
+  readers, the field is `overCap`, and a test reads the same fixtures at three caps.
+  <!-- tm: prio=high size=S labels=metrics ver=main -->
+- [x] **TM-16 — The corners the audit found**: a `sessions` segment in a path was enough
+  to pick the Codex reader, so a `CLAUDE_CONFIG_DIR` containing the word was read with
+  the wrong one; an `assistant` entry whose `content` was not a block list lost its usage
+  to a guard that ran first; the p50 of an even sample was the upper of the two;
+  `make-fixtures` ran inside `node --test` and rewrote the fixtures the tests were about
+  to read, so the committed ones were never the ones under test — it now lives in
+  `scripts/` and CI fails on a diff. <!-- tm: prio=med size=S labels=tests,project ver=main -->
 
 ## v0.2.0 — Beyond one machine <!-- ms: phase=next -->
 

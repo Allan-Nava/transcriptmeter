@@ -28,7 +28,10 @@ const opt = (name) => {
   return i >= 0 ? argv[i + 1] : null
 }
 const flag = (name) => argv.includes(name)
-const positional = argv.filter((a, i) => !a.startsWith('--') && !(i > 0 && argv[i - 1].startsWith('--') && !['--json', '--no-subagents'].includes(argv[i - 1])))
+// Every flag that takes no value. A word after one of these is a positional; a word
+// after any other `--flag` is that flag's value.
+const BOOLEAN = new Set(['--json', '--no-subagents', '--help'])
+const positional = argv.filter((a, i) => !a.startsWith('--') && (i === 0 || !argv[i - 1].startsWith('--') || BOOLEAN.has(argv[i - 1])))
 const cmd = positional[0] ?? 'summary'
 
 async function main() {
@@ -47,13 +50,14 @@ async function main() {
     console.error(`transcriptmeter: cannot read --since ${opt('--since')} — use 7d, 12h, 2w or a date`)
     process.exit(2)
   }
-  let ms = loadSessions(roots).map((s) => sessionMetrics(s, custom))
+  // The cap is applied while reading, so the count and the heading above it agree.
+  const cap = Number(opt('--cap') ?? 8000)
+  let ms = loadSessions(roots, cap).map((s) => sessionMetrics(s, custom))
   if (since) ms = ms.filter((m) => (m.end ?? m.start ?? 0) >= since)
   if (opt('--project')) ms = ms.filter((m) => (m.project ?? '').includes(opt('--project')))
   if (opt('--harness')) ms = ms.filter((m) => m.harness === opt('--harness'))
   if (flag('--no-subagents')) ms = ms.filter((m) => !m.subagent)
   ms.sort((a, b) => (a.start ?? 0) - (b.start ?? 0))
-  const cap = Number(opt('--cap') ?? 8000)
   if (cmd === 'session') {
     const key = positional[1]
     const m = ms.find((x) => x.file === resolve(key ?? '') || x.id === key || (key && x.file.includes(key)))
@@ -65,8 +69,8 @@ async function main() {
   }
   const a = aggregate(ms)
   if (cmd === 'sessions') return console.log(flag('--json') ? JSON.stringify(ms, null, 2) : renderSessions(ms))
-  if (cmd === 'tools') return console.log(flag('--json') ? JSON.stringify({ tools: a.tools, commands: a.commands, over8k: a.over8k, toolChars: a.toolChars }, null, 2) : renderTools(a, cap))
-  console.log(flag('--json') ? JSON.stringify(a, null, 2) : renderSummary(a, { since: opt('--since') }))
+  if (cmd === 'tools') return console.log(flag('--json') ? JSON.stringify({ tools: a.tools, commands: a.commands, overCap: a.overCap, cap, toolChars: a.toolChars }, null, 2) : renderTools(a, cap))
+  console.log(flag('--json') ? JSON.stringify(a, null, 2) : renderSummary(a, { since: opt('--since'), cap }))
 }
 
 function check() {
@@ -86,7 +90,7 @@ function check() {
     const readme = readFileSync(join(ROOT, 'README.md'), 'utf8')
     if (!/nothing\s+leaves\s+the\s+machine/i.test(readme)) errors.push('README.md must state that nothing leaves the machine')
     if (!/sizes and identifiers only|never .* message text/i.test(readme)) errors.push('README.md must state what is read and what is never shown')
-    const { PRICES_DATE } = JSON.parse(JSON.stringify({ PRICES_DATE: /PRICES_DATE = '(\d{4}-\d{2}-\d{2})'/.exec(readFileSync(join(ROOT, 'bin', 'lib', 'prices.mjs'), 'utf8'))?.[1] }))
+    const PRICES_DATE = /PRICES_DATE = '(\d{4}-\d{2}-\d{2})'/.exec(readFileSync(join(ROOT, 'bin', 'lib', 'prices.mjs'), 'utf8'))?.[1]
     if (PRICES_DATE && !readme.includes(PRICES_DATE)) errors.push(`README.md must carry the price table's date ${PRICES_DATE}`)
   }
   for (const m of ['prices.mjs', 'metrics.mjs', 'render.mjs', 'discover.mjs', 'readers/claude.mjs', 'readers/codex.mjs', 'readers/common.mjs']) if (!existsSync(join(ROOT, 'bin', 'lib', m))) errors.push(`bin/lib/${m} is missing`)

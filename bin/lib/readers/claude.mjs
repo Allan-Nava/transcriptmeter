@@ -7,7 +7,7 @@ import { commandPrefix, toolResultText } from './common.mjs'
 
 const PHASE = /You are in the \*\*(Questions|Research|Design|Structure|Plan|Implement)\*\* phase/
 
-export function readClaudeSession(file) {
+export function readClaudeSession(file, cap = 8000) {
   let lines
   try {
     lines = readFileSync(file, 'utf8').split('\n')
@@ -27,7 +27,7 @@ export function readClaudeSession(file) {
     turns: [], // one per API response: {t, model, input, cacheRead, write5m, write1h, output}
     tools: {}, // tool name → {n, chars}
     commands: {}, // Bash prefix → chars
-    over8k: 0,
+    overCap: 0,
     phase: null,
     userMessages: 0,
     compactions: 0,
@@ -54,8 +54,10 @@ export function readClaudeSession(file) {
       if (s.start === null || ts < s.start) s.start = ts
       if (s.end === null || ts > s.end) s.end = ts
     }
+    // The usage is accounted before the content is looked at: a response whose
+    // content is not a block list still cost what it cost.
     const m = e.message
-    if (!m || !Array.isArray(m.content)) continue
+    if (!m) continue
     if (e.type === 'assistant') {
       const u = m.usage
       const rid = e.requestId ?? m.id ?? null
@@ -74,8 +76,8 @@ export function readClaudeSession(file) {
         })
         if (m.model) s.models[m.model] = (s.models[m.model] ?? 0) + 1
       }
-      for (const c of m.content) if (c.type === 'tool_use') uses.set(c.id, { name: c.name, command: c.name === 'Bash' ? commandPrefix(c.input?.command) : null })
-    } else if (e.type === 'user') {
+      if (Array.isArray(m.content)) for (const c of m.content) if (c.type === 'tool_use') uses.set(c.id, { name: c.name, command: c.name === 'Bash' ? commandPrefix(c.input?.command) : null })
+    } else if (e.type === 'user' && Array.isArray(m.content)) {
       let human = false
       for (const c of m.content) {
         if (c.type === 'text') {
@@ -91,7 +93,7 @@ export function readClaudeSession(file) {
           const t = (s.tools[use.name] ??= { n: 0, chars: 0 })
           t.n++
           t.chars += n
-          if (n > 8000) s.over8k++
+          if (n > cap) s.overCap++
           if (use.command) s.commands[use.command] = (s.commands[use.command] ?? 0) + n
         }
       }

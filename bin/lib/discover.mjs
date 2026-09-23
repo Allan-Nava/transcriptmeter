@@ -26,16 +26,29 @@ function* jsonlFiles(root, depth = 0) {
 }
 
 export function kindOf(root) {
-  if (/(^|\/)\.?codex(\/|$)|(^|\/)sessions(\/|$)/.test(root)) return 'codex'
+  if (/(^|\/)\.?codex(\/|$)/.test(root)) return 'codex'
+  // A directory called `sessions` is Codex's only when it is laid out by year.
+  // Claude Code's own root is `<CLAUDE_CONFIG_DIR>/projects`, and a config directory
+  // with `sessions` in its path used to be read with the wrong reader.
+  if (/(^|\/)sessions\/?$/.test(root)) {
+    try {
+      if (readdirSync(root).some((f) => /^\d{4}$/.test(f))) return 'codex'
+    } catch {
+      return 'claude'
+    }
+  }
   return 'claude'
 }
 
-export function loadSessions(roots) {
+// `cap` is the size above which a tool result is counted as oversized. It is the
+// user's `--cap`, not a constant: the count and the number the report puts above it
+// have to be the same one.
+export function loadSessions(roots, cap = 8000) {
   const out = []
   for (const root of roots) {
     const read = kindOf(root) === 'codex' ? readCodexSession : readClaudeSession
     for (const f of jsonlFiles(root)) {
-      const s = read(f)
+      const s = read(f, cap)
       if (s) out.push(s)
     }
   }

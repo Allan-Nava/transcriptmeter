@@ -143,11 +143,11 @@ jobs:
             echo "## Install"
             echo
             echo '```'
-            echo "/plugin marketplace add Allan-Nava/transcriptmeter"
-            echo "/plugin install transcriptmeter@transcriptmeter"
+            echo "npx transcriptmeter            # no install"
+            echo "npm i -g transcriptmeter       # or keep it"
             echo '```'
             echo
-            echo "Set TYPESAFE_API_KEY in the environment Claude Code runs in. Without it every gate falls through."
+            echo "Zero dependencies, Node 18 or later. Reads ~/.claude/projects and ~/.codex/sessions; sizes and identifiers only, nothing leaves the machine."
             echo
             echo "Repo: https://github.com/Allan-Nava/transcriptmeter"
             echo

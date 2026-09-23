@@ -28,13 +28,17 @@ bin/lib/args.mjs          the --since parser, pure and tested
 bin/lib/metrics.mjs       sessionMetrics (KPIs, cost, misses, switches) and aggregate
 bin/lib/prices.mjs        the dated list-price table; PRICES_DATE is load-bearing
 bin/lib/render.mjs        the text output; --json bypasses it
-test/                     node:test suites over synthetic fixtures with the real field shapes;
-                          test/make-fixtures.mjs regenerates test/fixtures/
+test/                     node:test suites over the committed fixtures in test/fixtures/,
+                          which carry the real field shapes and no real content
+scripts/make-fixtures.mjs regenerates test/fixtures/; CI fails on a diff, so the
+                          fixtures and their generator cannot drift apart
 .github/workflows/        ci.yml (check + tests on Node 18/20/22/24, CLI smoke on fixtures, pack),
                           release.yml (tag transcriptmeter--v*: npm over OIDC, release, milestone),
                           release-drift.yml, pages.yml, codeql.yml, backlog-issues.yml
 site/build.mjs            generates site/dist/index.html FROM README.md
-assets/                   logo.svg, logo-mono.svg
+assets/                   logo.svg (single source: favicon, header, hero, README),
+                          logo-mono.svg, social-preview.html and the PNG rendered from it
+                          with headless Chrome — the site emits og:image only if it exists
 BACKLOG.md / ROADMAP.md   source of truth / generated view; scripts/backlog.mjs
 ```
 
@@ -50,8 +54,9 @@ BACKLOG.md / ROADMAP.md   source of truth / generated view; scripts/backlog.mjs
 4. **Every price carries a date.** `PRICES_DATE` in `bin/lib/prices.mjs`; the README must
    show the same date (`check` enforces it). A model not in the table is reported as
    unpriced, never guessed.
-5. **Fixtures, not real transcripts, in tests.** `test/make-fixtures.mjs` builds them
-   with the documented field shapes; a real transcript never enters the repository.
+5. **Fixtures, not real transcripts, in tests.** `scripts/make-fixtures.mjs` builds them
+   with the documented field shapes; a real transcript never enters the repository. The
+   tests read the committed fixtures as they are — CI regenerates them and fails on a diff.
 6. **Every number in the README is a run, dated**, and says whose machine.
 
 ## Facts the code depends on (dated — re-verify before every tag)
@@ -81,7 +86,7 @@ cache_write_input_tokens, output_tokens, reasoning_output_tokens, total_tokens}`
 
 ```bash
 npm test                                                   # check + node --test
-node test/make-fixtures.mjs                                # after changing a fixture shape
+node scripts/make-fixtures.mjs                             # after changing a fixture shape
 node bin/transcriptmeter.mjs --roots test/fixtures/claude,test/fixtures/codex
 node bin/transcriptmeter.mjs --since 7d                     # your own machine, sizes only
 npm run backlog && npm run build:site

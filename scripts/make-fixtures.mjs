@@ -1,9 +1,15 @@
-// Synthetic transcripts with the real field shapes and no real content. Run once to
-// regenerate test/fixtures/; the tests and the CI smoke read them.
+// Synthetic transcripts with the real field shapes and no real content:
+//
+//   node scripts/make-fixtures.mjs
+//
+// Writes test/fixtures/, which is committed — the tests and the CI smoke read those
+// files, they do not regenerate them. CI regenerates and fails on a diff, so the
+// fixtures and this generator cannot drift apart silently. A real transcript never
+// enters the repository.
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-const HERE = dirname(fileURLToPath(import.meta.url))
+const HERE = join(dirname(fileURLToPath(import.meta.url)), '..', 'test')
 const j = (rows) => rows.map((r) => JSON.stringify(r)).join('\n') + '\n'
 const t0 = Date.parse('2026-09-20T10:00:00Z')
 const ts = (m) => new Date(t0 + m * 60000).toISOString()

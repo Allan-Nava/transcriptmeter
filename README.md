@@ -76,6 +76,9 @@ is how the tests and CI run it against fixtures.
   a shell command's first word or two and a QRSPI phase name.
 - Know your subscription. Costs are list prices for an API key, dated; on a plan they
   measure the plan's usage, not a bill.
+- Put a number on a session that used an unpriced model. One unpriced response and the
+  whole session's cost is `—`: a partial total would read as the total. The tokens are
+  still counted, and the summary names the models it could not price.
 - Price Codex models: no public table this tool can cite yet. Tokens are reported.
 - Reconstruct a "task": the unit is the session. With one session per QRSPI phase that is
   exactly the unit you want; in a long free-form session it is not.

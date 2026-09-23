@@ -46,7 +46,7 @@ test('the Claude Code reader: turns, cache classes, tools, commands, phase, suba
   assert.equal(s1.misses, 1, 'a warm prefix that came back uncached')
   assert.equal(s1.tools.Bash.chars, 12000)
   assert.equal(s1.tools.Read.chars, 3000)
-  assert.equal(s1.over8k, 1)
+  assert.equal(s1.overCap, 1)
   assert.equal(s1.commands['npm test'], 12000)
   assert.ok(s1.cost > 0)
   assert.equal(s1.userMessages, 2)
@@ -67,7 +67,7 @@ test('the Codex reader: prompt split into cached and uncached, model from world_
   assert.deepEqual(m.models, ['gpt-6-luna'])
   assert.equal(m.cost, null)
   assert.equal(m.commands['git log'], 9000)
-  assert.equal(m.over8k, 1)
+  assert.equal(m.overCap, 1)
   assert.equal(m.userMessages, 1)
 })
 
@@ -87,7 +87,17 @@ test('aggregate and render', () => {
   assert.match(sum, /`npm test` 12,000/)
   assert.match(renderSessions(ms), /Research/)
   assert.match(renderSession(ms.find((m) => m.id === 'sess-claude-1')), /peak context 49,000/)
-  assert.match(renderTools(a, 8000), /over 8,000 characters: 2/)
+  assert.match(renderTools(a, 8000), /Tool results over 8,000 characters: 2/)
+})
+
+// The cap is applied while reading, not while printing: the count under the heading
+// has to be the count for that heading. `--cap 2000` used to print the 8,000 figure.
+test('--cap is the cap that is counted, not just the one printed', () => {
+  const at = (cap) => aggregate(loadSessions([CLAUDE, CODEX], cap).map((s) => sessionMetrics(s)))
+  assert.equal(at(8000).overCap, 2, 'the 12,000 and 9,000 character results')
+  assert.equal(at(2000).overCap, 3, 'the 3,000 character one joins them')
+  assert.equal(at(20000).overCap, 0)
+  assert.match(renderTools(at(2000), 2000), /Tool results over 2,000 characters: 3/)
 })
 
 test('CLI: summary, sessions, session, tools, --json, --since, --harness, --no-subagents, check', () => {
@@ -100,6 +110,8 @@ test('CLI: summary, sessions, session, tools, --json, --since, --harness, --no-s
   assert.match(run('session', 'sess-codex-1').stdout, /codex session sess-codex-1/)
   assert.equal(run('session', 'nope').status, 1)
   assert.match(run('tools').stdout, /Top shell commands/)
+  const capped = JSON.parse(run('tools', '--cap', '2000', '--json').stdout)
+  assert.deepEqual([capped.cap, capped.overCap], [2000, 3])
   const check = spawnSync(process.execPath, [BIN, 'check'], { encoding: 'utf8' })
   assert.match(check.stdout + check.stderr, /ok — two readers|✗/)
 })

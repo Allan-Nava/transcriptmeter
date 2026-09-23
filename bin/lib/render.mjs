@@ -12,7 +12,7 @@ function table(headers, rows) {
   return [line(headers), `├${w.map((n) => '─'.repeat(n + 2)).join('┼')}┤`, ...rows.map(line)].join('\n')
 }
 
-export function renderSummary(a, { since } = {}) {
+export function renderSummary(a, { since, cap = 8000 } = {}) {
   const top = Object.entries(a.commands).sort((x, y) => y[1] - x[1]).slice(0, 8)
   const tools = Object.entries(a.tools).sort((x, y) => y[1].chars - x[1].chars).slice(0, 6)
   return [
@@ -21,7 +21,7 @@ export function renderSummary(a, { since } = {}) {
     `cache hit ratio ${pct(a.cacheHitRatio)} · cache misses after a warm prefix ${k(a.misses)} · model switches ${k(a.modelSwitches)} · compactions ${k(a.compactions)}`,
     `peak context per session: p50 ${k(a.peakP50)} · p95 ${k(a.peakP95)} tokens`,
     `estimated cost ${usd(a.cost)} at list prices of ${PRICES_DATE}${a.unpriced.length ? ` — unpriced models, tokens only: ${a.unpriced.join(', ')}` : ''}`,
-    `tool results: ${k(a.toolChars)} characters (≈ ${k(a.toolChars / 4)} tokens) · ${k(a.over8k)} results over 8,000 characters · by tool: ${tools.map(([t, v]) => `${t} ${k(v.chars)}`).join(' · ')}`,
+    `tool results: ${k(a.toolChars)} characters (≈ ${k(a.toolChars / 4)} tokens) · ${k(a.overCap)} results over ${k(cap)} characters · by tool: ${tools.map(([t, v]) => `${t} ${k(v.chars)}`).join(' · ')}`,
     top.length ? `top shell commands by result size: ${top.map(([c, n]) => `\`${c}\` ${k(n)}`).join(' · ')}` : '',
     Object.keys(a.phases).length ? `QRSPI phases seen: ${Object.entries(a.phases).map(([p, n]) => `${p} ${n}`).join(' · ')}` : '',
   ].filter(Boolean).join('\n')
@@ -42,7 +42,7 @@ export function renderSession(m) {
     `tokens: ${k(m.total)} — uncached input ${k(m.input)} · cache read ${k(m.cacheRead)} · cache write ${k(m.write5m + m.write1h)} · output ${k(m.output)}`,
     `peak context ${k(m.peak)} · cache hit ratio ${pct(m.cacheHitRatio)} · misses after a warm prefix ${k(m.misses)} · model switches ${k(m.modelSwitches)}`,
     `estimated cost ${usd(m.cost)}`,
-    `tool results ${k(m.toolChars)} characters · over 8,000: ${k(m.over8k)}${tools.length ? ` · ${tools.map(([t, v]) => `${t} ${k(v.chars)} (${v.n})`).join(' · ')}` : ''}`,
+    `tool results ${k(m.toolChars)} characters · over the cap: ${k(m.overCap)}${tools.length ? ` · ${tools.map(([t, v]) => `${t} ${k(v.chars)} (${v.n})`).join(' · ')}` : ''}`,
     top.length ? `top shell commands by result size: ${top.map(([c, n]) => `\`${c}\` ${k(n)}`).join(' · ')}` : '',
   ].filter(Boolean).join('\n')
 }
@@ -54,7 +54,7 @@ export function renderTools(a, cap) {
     `## Tool results across ${k(a.sessions)} sessions: ${k(a.toolChars)} characters (≈ ${k(a.toolChars / 4)} tokens)`,
     table(['tool', 'results', 'characters', 'share'], tools.map(([t, v]) => [t, k(v.n), k(v.chars), pct(v.chars / Math.max(1, a.toolChars))])),
     '',
-    `Shell results over ${k(cap)} characters: ${k(a.over8k)}.`,
+    `Tool results over ${k(cap)} characters: ${k(a.overCap)}.`,
     `Top shell commands by result size:`,
     table(['command', 'characters'], top.map(([c, n]) => [c, k(n)])),
   ].join('\n')

@@ -4,14 +4,14 @@
 import { readFileSync } from 'node:fs'
 import { commandPrefix, toolResultText } from './common.mjs'
 
-export function readCodexSession(file) {
+export function readCodexSession(file, cap = 8000) {
   let lines
   try {
     lines = readFileSync(file, 'utf8').split('\n')
   } catch {
     return null
   }
-  const s = { harness: 'codex', file, id: null, project: null, version: null, subagent: false, start: null, end: null, models: {}, turns: [], tools: {}, commands: {}, over8k: 0, phase: null, userMessages: 0, compactions: 0 }
+  const s = { harness: 'codex', file, id: null, project: null, version: null, subagent: false, start: null, end: null, models: {}, turns: [], tools: {}, commands: {}, overCap: 0, phase: null, userMessages: 0, compactions: 0 }
   let model = null
   const calls = new Map()
   for (const line of lines) {
@@ -54,7 +54,7 @@ export function readCodexSession(file) {
       const t = (s.tools[use.name] ??= { n: 0, chars: 0 })
       t.n++
       t.chars += n
-      if (n > 8000) s.over8k++
+      if (n > cap) s.overCap++
       if (use.command) s.commands[use.command] = (s.commands[use.command] ?? 0) + n
     }
   }
