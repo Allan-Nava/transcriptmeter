@@ -9,7 +9,8 @@
 //   transcriptmeter weeks              one row per week: a change in habits as a step
 //   transcriptmeter runs               one table per thoughts/<task> run, by QRSPI phase
 //   transcriptmeter prices             the price table and its date
-//   transcriptmeter check              validate this package
+//   transcriptmeter check [--release]  validate this package; --release is the stricter
+//                                      pass a tag gets, where [Unreleased] must be empty
 //
 //   --since 7d|2026-09-01   --project <substring of the working directory>
 //   --harness claude|codex  --roots <dir,dir>   --json   --no-subagents   --cap 8000
@@ -36,8 +37,13 @@ const BOOLEAN = new Set(['--json', '--no-subagents', '--help'])
 const positional = argv.filter((a, i) => !a.startsWith('--') && (i === 0 || !argv[i - 1].startsWith('--') || BOOLEAN.has(argv[i - 1])))
 const cmd = positional[0] ?? 'summary'
 
+let checkDeps = {}
+
 async function main() {
-  if (cmd === 'check') return check()
+  if (cmd === 'check') {
+    checkDeps = await import('./lib/changelog.mjs')
+    return check()
+  }
   if (cmd === 'help' || flag('--help')) return console.log(readFileSync(join(ROOT, 'bin', 'transcriptmeter.mjs'), 'utf8').split('\n').slice(1, 20).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   const { PRICES, PRICES_DATE } = await import('./lib/prices.mjs')
   if (cmd === 'prices') return console.log(`list prices, USD per million tokens, ${PRICES_DATE}\n${Object.entries(PRICES).map(([m, p]) => `  ${m.padEnd(20)} input ${p.input} · output ${p.output} · cache read ×${p.read}`).join('\n')}`)
@@ -85,6 +91,7 @@ async function main() {
 
 function check() {
   const errors = []
+  const { changelogFaults } = checkDeps
   const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
   if (pkg.name !== 'transcriptmeter') errors.push('package.json must be named transcriptmeter')
   if (pkg.dependencies && Object.keys(pkg.dependencies).length) errors.push('no runtime dependencies — this is a CLI that must start instantly')
@@ -93,8 +100,7 @@ function check() {
   for (const f of ['README.md', 'CONTRIBUTING.md', 'CLAUDE.md', 'LICENSE', 'BACKLOG.md', 'ROADMAP.md', 'CHANGELOG.md']) if (!existsSync(join(ROOT, f))) errors.push(`${f} is missing`)
   if (existsSync(join(ROOT, 'CHANGELOG.md'))) {
     const log = readFileSync(join(ROOT, 'CHANGELOG.md'), 'utf8')
-    if (!/^## \[Unreleased\]/m.test(log)) errors.push('CHANGELOG.md needs an [Unreleased] section')
-    if (!log.includes(`## [${pkg.version}]`)) errors.push(`CHANGELOG.md has no section for ${pkg.version}`)
+    errors.push(...changelogFaults(log, pkg.version, { release: flag('--release') }))
   }
   if (existsSync(join(ROOT, 'README.md'))) {
     const readme = readFileSync(join(ROOT, 'README.md'), 'utf8')
@@ -103,7 +109,7 @@ function check() {
     const PRICES_DATE = /PRICES_DATE = '(\d{4}-\d{2}-\d{2})'/.exec(readFileSync(join(ROOT, 'bin', 'lib', 'prices.mjs'), 'utf8'))?.[1]
     if (PRICES_DATE && !readme.includes(PRICES_DATE)) errors.push(`README.md must carry the price table's date ${PRICES_DATE}`)
   }
-  for (const m of ['prices.mjs', 'metrics.mjs', 'render.mjs', 'discover.mjs', 'readers/claude.mjs', 'readers/codex.mjs', 'readers/common.mjs']) if (!existsSync(join(ROOT, 'bin', 'lib', m))) errors.push(`bin/lib/${m} is missing`)
+  for (const m of ['prices.mjs', 'metrics.mjs', 'render.mjs', 'discover.mjs', 'args.mjs', 'changelog.mjs', 'readers/claude.mjs', 'readers/codex.mjs', 'readers/common.mjs']) if (!existsSync(join(ROOT, 'bin', 'lib', m))) errors.push(`bin/lib/${m} is missing`)
   if (errors.length) {
     for (const e of errors) console.error(`✗ ${e}`)
     process.exit(1)

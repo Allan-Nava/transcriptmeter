@@ -114,6 +114,13 @@ TM-8 compared the numbers against sources that are not this tool and found two w
 assumptions in the process. What it could not reach, and what the audit noted in passing,
 lives here.
 
+- [x] **TM-20 — Nothing checked that the CHANGELOG describes the release**: `release.yml`
+  verifies that the tag and `package.json` agree on a version, which they always did, and
+  nothing read the prose — so 0.0.1 said "Not published" after it was published, 0.1.0
+  called itself the first release worth installing and never reached the registry, and
+  0.2.0 shipped the Codex prices while listing them under [Unreleased]. `check` now
+  requires the newest section to be this version, and `check --release`, which the tag
+  runs, requires [Unreleased] to be empty. <!-- tm: prio=high size=S labels=release ver=main -->
 - [ ] **TM-17 — The cost figure against the harness's own**: Claude Code's `/cost` and
   Codex's `/status` report a session's cost themselves. Both are interactive, so the
   comparison needs a person to run them on a named session and paste two numbers; record

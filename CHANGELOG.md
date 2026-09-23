@@ -5,6 +5,12 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 
 ## [Unreleased]
 
+### Added
+- `check` reads the CHANGELOG instead of only looking for a heading: the newest released
+  section must be `package.json`'s version, and `check --release` — which `release.yml`
+  now runs on the tagged tree — additionally requires `[Unreleased]` to be empty, because
+  whatever is under it at a tag ships without being announced (TM-20).
+
 ## [0.2.0] — 2026-09-23
 
 Three ways of reading the same transcripts that 0.1.0 did not have — a run, a week, and
