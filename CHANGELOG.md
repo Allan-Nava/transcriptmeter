@@ -5,6 +5,12 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 
 ## [Unreleased]
 
+### Added
+- `--since` refuses a value it cannot read (exit 2) instead of silently dropping every
+  session; the parser lives in `bin/lib/args.mjs` and is tested (TM-6).
+- Edge tests: `--project`, `--cap`, `--prices` on an unpriced model, malformed lines,
+  empty files, sessions without API turns, a root that does not exist (TM-6).
+
 ## [0.0.1] — 2026-09-23
 
 Not published: the first working CLI, measured on one machine.

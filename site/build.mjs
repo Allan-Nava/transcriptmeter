@@ -8,7 +8,7 @@
 //   node site/build.mjs [--out site/dist]
 
 import { marked } from 'marked'
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -65,7 +65,7 @@ function parseReadme(source) {
 }
 
 // The intro is the lede (first paragraph) and whatever follows it — here the
-// status note. No pipeline diagram: this plugin is one hook, not six phases.
+// status note. The README's own logo <p> is dropped: the page draws its own mark.
 function parseIntro(raw) {
   const intro = raw
     .split('\n')
@@ -85,7 +85,7 @@ function dropEmptyHead(html) {
 
 // Bare `path/` and `file.md` references in the README become links to the repo.
 function linkifyPaths(html) {
-  return html.replace(/<code>([\w./-]+\.(?:md|json|mjs)|(?:hooks|bin|evals|thoughts)\/[\w./-]*)<\/code>/g, (full, path) => {
+  return html.replace(/<code>([\w./-]+\.(?:md|json|mjs)|(?:bin|scripts|test|thoughts)\/[\w./-]*)<\/code>/g, (full, path) => {
     const clean = path.replace(/\/$/, '')
     if (!existsSync(join(ROOT, clean))) return full
     return `<a class="pathlink" href="${BLOB}/${clean}"><code>${path}</code></a>`
@@ -100,54 +100,53 @@ ${linkifyPaths(dropEmptyHead(marked.parse(s.body)))}
   </section>`
 }
 
-// The one thing the page adds to the README: the gates that actually ship, read
-// off hooks/hooks.json so the list cannot go stale.
-function renderInventory() {
-  const hooks = JSON.parse(readFileSync(join(ROOT, 'hooks', 'hooks.json'), 'utf8'))
-  const cards = []
-  for (const [event, entries] of Object.entries(hooks.hooks)) {
-    for (const entry of entries) {
-      for (const h of entry.hooks) {
-        cards.push({ event, matcher: entry.matcher ?? null, handler: h.args?.[0] ?? '', timeout: h.timeout, status: h.statusMessage ?? '' })
-      }
-    }
-  }
-  return cards
-    .map(
-      (c) => `      <article class="card">
-        <h3><a href="${BLOB}/hooks/hooks.json"><code>${esc(c.event)}</code></a>${c.matcher ? ` <span class="matcher">on <code>${esc(c.matcher)}</code></span>` : ''}</h3>
-        <p>${esc(c.status.replace(/^transcriptmeter:\s*/, ''))}</p>
-        <ul class="refs">
-          <li><a href="${BLOB}/bin/transcriptmeter.mjs"><code>transcriptmeter ${esc(c.handler)}</code></a></li>
-          <li><span class="ref-plain">timeout ${esc(String(c.timeout))} s</span></li>
-        </ul>
-      </article>`,
-    )
-    .join('\n')
-}
-
 // --- assemble ---------------------------------------------------------------
 
 const { title, intro, sections } = parseReadme(md)
 const { lede, after } = parseIntro(intro)
-const description = lede
-  .replace(/\*\*/g, '')
-  .replace(/\n/g, ' ')
-  .split(/\.\s/)[0]
-  .concat('.')
-// License is one word — the footer already carries it. The generated skills
-// index goes before Prior art, so the page ends on credits, not on an appendix.
+
+// The README's H1 is `name — tagline`. The name is the wordmark and the <h1>; the
+// tagline sits under it. Splitting here is what keeps the page from repeating the
+// tagline twice and from hard-coding either half.
+const [name, tagline = ''] = title.split(/\s+—\s+/)
+// The wordmark: the second half of the name in the accent colour, the way the
+// README's logo splits it. `transcriptmeter` → transcript·meter.
+const wordmark = /^(.*?)(meter|gate|hook|spi)$/i.exec(name)
+const brandHtml = wordmark ? `${esc(wordmark[1])}<span>${esc(wordmark[2])}</span>` : esc(name)
+
+// A meta description is a sentence, not a paragraph: markdown out, one sentence,
+// cut on a word boundary if it still runs long.
+const description = (() => {
+  const flat = lede.replace(/\*\*/g, '').replace(/`/g, '').replace(/\s+/g, ' ').trim()
+  const sentence = flat.split(/(?<=[a-z0-9)])\.\s/)[0].replace(/\.$/, '').concat('.')
+  if (sentence.length <= 160) return sentence
+  return sentence.slice(0, 157).replace(/\s+\S*$/, '') + '…'
+})()
+
+// License is one word — the footer already carries it. Prior art stays in the page
+// but out of the nav, so the page ends on credits, not on an appendix.
 const body = sections.filter((s) => !/^license$/i.test(s.heading))
 const nav = body.filter((s) => !/^prior art$/i.test(s.heading))
-const priorArtAt = body.findIndex((s) => /^prior art$/i.test(s.heading))
-const inventorySection = ''
 const rendered = body.map(renderSection)
-if (inventorySection) rendered.splice(priorArtAt === -1 ? rendered.length : priorArtAt, 0, inventorySection)
 
 // One derived headline, reused by <title>, Open Graph, Twitter and JSON-LD, so
 // the four can never drift apart. Like everything else on the page, the words
 // come from README.md — the generator adds none of its own.
-const headline = `${title} — what your agent sessions cost, from the transcripts on your disk`
+const headline = title
+
+// A social card is shipped only when it exists: a <meta og:image> pointing at a
+// 404 is worse than none, and this one is a PNG rendered from
+// assets/social-preview.html with headless Chrome, not a build product.
+const socialCard = existsSync(join(ROOT, 'assets', 'social-preview.png'))
+const cardTags = socialCard
+  ? `<meta property="og:image" content="${SITE}assets/social-preview.png">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="640">
+<meta property="og:image:alt" content="${esc(headline)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${SITE}assets/social-preview.png">
+<meta name="twitter:image:alt" content="${esc(headline)}">`
+  : `<meta name="twitter:card" content="summary">`
 
 // Structured data. The strings are the same two the meta tags use; nothing here
 // is written for the crawler that is not already on the page.
@@ -164,7 +163,7 @@ const jsonLd = JSON.stringify({
     },
     {
       '@type': 'SoftwareApplication',
-      '@id': `${SITE}#plugin`,
+      '@id': `${SITE}#cli`,
       name: title,
       description,
       url: SITE,
@@ -195,15 +194,9 @@ const html = `<!doctype html>
 <meta property="og:url" content="${SITE}">
 <meta property="og:title" content="${esc(headline)}">
 <meta property="og:description" content="${esc(description)}">
-<meta property="og:image" content="${SITE}assets/social-preview.png">
-<meta property="og:image:width" content="1280">
-<meta property="og:image:height" content="640">
-<meta property="og:image:alt" content="${esc(headline)}">
-<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(headline)}">
 <meta name="twitter:description" content="${esc(description)}">
-<meta name="twitter:image" content="${SITE}assets/social-preview.png">
-<meta name="twitter:image:alt" content="${esc(headline)}">
+${cardTags}
 <link rel="icon" href="${favicon}">
 <link rel="apple-touch-icon" href="assets/logo.svg">
 <script type="application/ld+json">${jsonLd}</script>
@@ -257,7 +250,8 @@ header.top nav a:hover { color: var(--ink); }
   display: inline-block; font: 600 .72rem/1 var(--mono); letter-spacing: .14em; text-transform: uppercase;
   color: var(--accent); background: var(--accent-soft); border-radius: 99px; padding: .45rem .8rem; margin-bottom: 1.5rem;
 }
-.hero h1 { font-size: clamp(2.6rem, 7vw, 4.2rem); line-height: 1; margin: 0 0 1.25rem; letter-spacing: -.03em; }
+.hero h1 { font-size: clamp(2.6rem, 7vw, 4.2rem); line-height: 1; margin: 0 0 .75rem; letter-spacing: -.03em; }
+.tagline { font-size: clamp(1.15rem, 2.6vw, 1.5rem); line-height: 1.3; color: var(--ink); margin: 0 0 1.25rem; max-width: 40rem; letter-spacing: -.01em; }
 .lede { font-size: clamp(1.05rem, 2.2vw, 1.28rem); color: var(--muted); max-width: 46rem; margin: 0 0 1.75rem; }
 .lede strong { color: var(--ink); font-weight: 600; }
 .cta { display: flex; gap: .7rem; flex-wrap: wrap; margin-bottom: 3rem; }
@@ -280,17 +274,6 @@ th, td { text-align: left; padding: .62rem .8rem; border-bottom: 1px solid var(-
 th { font-size: .78rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
 blockquote { margin: 1.25rem 0; padding: .1rem 0 .1rem 1.1rem; border-left: 3px solid var(--accent); color: var(--muted); }
 
-/* inventory */
-.cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1.25rem; }
-.card h3 { margin: 0 0 .5rem; font-size: 1rem; }
-.card p { color: var(--muted); font-size: .9rem; margin: 0 0 .9rem; }
-.refs { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: .4rem; }
-.refs a { display: inline-block; font-size: .78rem; text-decoration: none; background: var(--code-bg); border: 1px solid var(--line); border-radius: 6px; padding: .2rem .5rem; }
-.refs a:hover { border-color: var(--accent); }
-.ref-plain { display: inline-block; font-size: .78rem; color: var(--muted); border: 1px dashed var(--line); border-radius: 6px; padding: .2rem .5rem; }
-.matcher { font-weight: 400; color: var(--muted); font-size: .85rem; }
-
 /* copy button */
 .codeblock { position: relative; }
 .copy {
@@ -311,7 +294,7 @@ footer .row { display: flex; gap: 1.25rem; flex-wrap: wrap; }
 <body>
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#top">${mark(22, 'brand-mark')}hook<span>gate</span></a>
+    <a class="brand" href="#top">${mark(22, 'brand-mark')}${brandHtml}</a>
     <nav>
 ${nav.map((s) => `      <a href="#${slug(s.heading)}">${esc(s.heading)}</a>`).join('\n')}
       <a class="gh" href="${REPO}">GitHub</a>
@@ -322,8 +305,9 @@ ${nav.map((s) => `      <a href="#${slug(s.heading)}">${esc(s.heading)}</a>`).jo
 <main class="wrap" id="top">
   <div class="hero">
     ${mark(66, 'hero-mark')}
-    <span class="eyebrow">Claude Code plugin · v${esc(pkg.version)}</span>
-    <h1>${esc(title)}</h1>
+    <span class="eyebrow">CLI for Claude Code &amp; Codex · v${esc(pkg.version)}</span>
+    <h1>${esc(name)}</h1>
+    ${tagline ? `<p class="tagline">${esc(tagline)}</p>` : ''}
     <div class="lede">${marked.parseInline(lede.replace(/\n/g, ' '))}</div>
     <div class="cta">
       <a class="primary" href="#install">Install</a>

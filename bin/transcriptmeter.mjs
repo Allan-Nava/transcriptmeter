@@ -31,25 +31,22 @@ const flag = (name) => argv.includes(name)
 const positional = argv.filter((a, i) => !a.startsWith('--') && !(i > 0 && argv[i - 1].startsWith('--') && !['--json', '--no-subagents'].includes(argv[i - 1])))
 const cmd = positional[0] ?? 'summary'
 
-function sinceMs(v) {
-  if (!v) return null
-  const m = /^(\d+)([dhw])$/.exec(v)
-  if (m) return Date.now() - Number(m[1]) * { h: 3600000, d: 86400000, w: 604800000 }[m[2]]
-  const t = Date.parse(v)
-  return Number.isNaN(t) ? null : t
-}
-
 async function main() {
   if (cmd === 'check') return check()
   if (cmd === 'help' || flag('--help')) return console.log(readFileSync(join(ROOT, 'bin', 'transcriptmeter.mjs'), 'utf8').split('\n').slice(1, 18).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   const { PRICES, PRICES_DATE } = await import('./lib/prices.mjs')
   if (cmd === 'prices') return console.log(`list prices, USD per million tokens, ${PRICES_DATE}\n${Object.entries(PRICES).map(([m, p]) => `  ${m.padEnd(20)} input ${p.input} · output ${p.output} · cache read ×${p.read}`).join('\n')}`)
   const { defaultRoots, loadSessions } = await import('./lib/discover.mjs')
+  const { sinceMs } = await import('./lib/args.mjs')
   const { aggregate, sessionMetrics } = await import('./lib/metrics.mjs')
   const { renderSession, renderSessions, renderSummary, renderTools } = await import('./lib/render.mjs')
   const custom = opt('--prices') ? JSON.parse(readFileSync(opt('--prices'), 'utf8')) : {}
   const roots = opt('--roots') ? opt('--roots').split(',').map((r) => resolve(r)) : defaultRoots()
   const since = sinceMs(opt('--since'))
+  if (opt('--since') && since === null) {
+    console.error(`transcriptmeter: cannot read --since ${opt('--since')} — use 7d, 12h, 2w or a date`)
+    process.exit(2)
+  }
   let ms = loadSessions(roots).map((s) => sessionMetrics(s, custom))
   if (since) ms = ms.filter((m) => (m.end ?? m.start ?? 0) >= since)
   if (opt('--project')) ms = ms.filter((m) => (m.project ?? '').includes(opt('--project')))
