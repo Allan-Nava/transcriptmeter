@@ -16,6 +16,7 @@ npx transcriptmeter sessions --since 7d
 npx transcriptmeter session <file or id>
 npx transcriptmeter tools --cap 8000
 npx transcriptmeter weeks --since 8w    # one row per week
+npx transcriptmeter runs                # one table per thoughts/<task> run, by phase
 npx transcriptmeter prices           # the list-price table and its date
 ```
 
@@ -36,7 +37,7 @@ npx transcriptmeter prices           # the list-price table and its date
 | Estimated cost at list prices, dated | the price table in `bin/lib/prices.mjs` | what the session would bill on an API key; on a subscription it is the size of what the plan absorbed |
 | Tool results by tool, shell results by command prefix, results over a cap | `tool_result` sizes matched to `tool_use` | where the context went; the input to a trimming policy such as [trimhook](https://github.com/Allan-Nava/trimhook) |
 | The same figures per week, one row each | the session's own end date, bucketed by the Monday in UTC | a change in habits shows as a step; a monthly total hides it |
-| QRSPI phase, when the first prompt names one | the phase prompt's own words | one session per phase means one row per phase — the run's KPIs read straight off the table |
+| QRSPI phase and `thoughts/<task>`, when the first prompt names them | the first prompt, reduced to a phase name from a closed list and a task id | one session per phase means one row per phase, and `runs` gives the whole task's KPIs |
 
 Unpriced models — every Codex model today — get tokens and a `—` in the cost column, and
 the summary names them. `--prices <file.json>` adds your own `{ "model": { "input", "output", "read" } }`.
@@ -92,6 +93,29 @@ fixtures and the fixtures encoded the assumption.
 What is still unchecked: the **cost** figure against what the harness itself reports for
 the same session (Claude Code's `/cost`, Codex's `/status`). Both are interactive, so the
 comparison needs a person to run them and paste two numbers — TM-17.
+
+## One run, by phase
+
+The session is the unit this tool can see. A **task** is not — unless the work was run
+as QRSPI phases, one session each, and the first prompt says which `thoughts/<task>` it
+belongs to. Then `runs` reads the whole thing down:
+
+```
+## HG-1-jev-gates
+│ phase       │ sessions │ turns │ peak p50 │ cache │ tokens    │ output │ cost   │
+├─────────────┼──────────┼───────┼──────────┼───────┼───────────┼────────┼────────┤
+│ Questions   │ 1        │ 3     │ 67,191   │ 63%   │ 182,095   │ 1,204  │ $0.93  │
+│ Research    │ 1        │ 9     │ 129,012  │ 84%   │ 791,334   │ 1,639  │ $1.86  │
+│ Design      │ 2        │ 29    │ 113,703  │ 91%   │ 2,596,905 │ 1,946  │ $3.71  │
+│ Structure   │ 1        │ 3     │ 79,218   │ 61%   │ 203,738   │ 521    │ $1.05  │
+│ Plan        │ 1        │ 16    │ 207,544  │ 91%   │ 2,030,867 │ 1,320  │ $2.70  │
+│ Implement   │ 5        │ 44    │ 74,022   │ 92%   │ 2,905,294 │ 5,762  │ $3.73  │
+│ —           │ 3        │ 13    │ 133,072  │ 54%   │ 1,138,204 │ 2,995  │ $6.89  │
+│ — whole run │ 14       │ 117   │ 79,218   │ 85%   │ 9,848,437 │ 15,387 │ $20.86 │
+```
+
+That last line is KPI 3, tokens per completed task, for the only unit where the question
+has an answer. Sessions of the run whose first prompt named no phase sort last, under `—`.
 
 ## A change in habits, as a step
 

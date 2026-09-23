@@ -7,6 +7,7 @@
 //   transcriptmeter session <file|id>  one session in detail
 //   transcriptmeter tools              tool results by tool and by shell command
 //   transcriptmeter weeks              one row per week: a change in habits as a step
+//   transcriptmeter runs               one table per thoughts/<task> run, by QRSPI phase
 //   transcriptmeter prices             the price table and its date
 //   transcriptmeter check              validate this package
 //
@@ -37,13 +38,13 @@ const cmd = positional[0] ?? 'summary'
 
 async function main() {
   if (cmd === 'check') return check()
-  if (cmd === 'help' || flag('--help')) return console.log(readFileSync(join(ROOT, 'bin', 'transcriptmeter.mjs'), 'utf8').split('\n').slice(1, 19).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
+  if (cmd === 'help' || flag('--help')) return console.log(readFileSync(join(ROOT, 'bin', 'transcriptmeter.mjs'), 'utf8').split('\n').slice(1, 20).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   const { PRICES, PRICES_DATE } = await import('./lib/prices.mjs')
   if (cmd === 'prices') return console.log(`list prices, USD per million tokens, ${PRICES_DATE}\n${Object.entries(PRICES).map(([m, p]) => `  ${m.padEnd(20)} input ${p.input} · output ${p.output} · cache read ×${p.read}`).join('\n')}`)
   const { defaultRoots, loadSessions } = await import('./lib/discover.mjs')
   const { sinceMs } = await import('./lib/args.mjs')
-  const { aggregate, sessionMetrics, weekly } = await import('./lib/metrics.mjs')
-  const { renderSession, renderSessions, renderSummary, renderTools, renderWeeks } = await import('./lib/render.mjs')
+  const { aggregate, runs, sessionMetrics, weekly } = await import('./lib/metrics.mjs')
+  const { renderRuns, renderSession, renderSessions, renderSummary, renderTools, renderWeeks } = await import('./lib/render.mjs')
   const custom = opt('--prices') ? JSON.parse(readFileSync(opt('--prices'), 'utf8')) : {}
   const roots = opt('--roots') ? opt('--roots').split(',').map((r) => resolve(r)) : defaultRoots()
   const since = sinceMs(opt('--since'))
@@ -67,6 +68,10 @@ async function main() {
       process.exit(1)
     }
     return console.log(flag('--json') ? JSON.stringify(m, null, 2) : renderSession(m))
+  }
+  if (cmd === 'runs') {
+    const r = runs(ms)
+    return console.log(flag('--json') ? JSON.stringify(r, null, 2) : renderRuns(r))
   }
   if (cmd === 'weeks') {
     const w = weekly(ms)

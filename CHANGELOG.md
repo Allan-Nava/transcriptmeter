@@ -6,6 +6,10 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 ## [Unreleased]
 
 ### Added
+- `runs`: the sessions of one `thoughts/<task>` QRSPI run, grouped by phase and ending on
+  the whole run — KPI 1 as the peak p50, KPI 3 as the run's tokens, KPI 4 as cache. The
+  task id comes from the first prompt, which is reduced to that identifier and a phase
+  name from a closed list; the prompt itself never reaches the output (TM-11).
 - `weeks`: the same figures bucketed by the Monday they fall in, UTC, one row each —
   sessions, turns, tokens, cache hit ratio, peak p50, misses with the cause most of them
   were pinned on, and cost. A change in habits shows as a step where a monthly total

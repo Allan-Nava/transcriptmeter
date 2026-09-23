@@ -54,6 +54,22 @@ export function renderSession(m) {
 // A trend is only readable if every row is the same shape: one line per week, the
 // columns in the order you would ask about them — how much work, how much of it was
 // cached, how big it got, what went wrong, what it cost.
+// A run reads down its phases and ends on the line that answers KPI 3: what the whole
+// task cost, in tokens and in dollars.
+export function renderRuns(rs) {
+  if (!rs.length) return 'No session names a thoughts/<task> in its first prompt.'
+  const row = (label, a) => [label, k(a.sessions), k(a.turns), k(a.peakP50), pct(a.cacheHitRatio), k(a.tokens.total), k(a.tokens.output), usd(a.cost)]
+  const out = []
+  for (const r of rs) {
+    out.push(`## ${r.task}`)
+    out.push(table(['phase', 'sessions', 'turns', 'peak p50', 'cache', 'tokens', 'output', 'cost'], [...r.phases.map((p) => row(p.phase ?? '—', p)), row('— whole run', r.total)]))
+    out.push('')
+  }
+  out.push('KPI 1 is peak p50, KPI 3 is the whole run\'s tokens, KPI 4 is cache. A session')
+  out.push('whose first prompt named no phase sorts last, under —.')
+  return out.join('\n')
+}
+
 export function renderWeeks(weeks) {
   if (!weeks.length) return 'No week has a session that reached the API.'
   const rows = weeks.map((w) => [

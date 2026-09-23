@@ -65,6 +65,7 @@ export function sessionMetrics(s, custom = {}) {
     project: s.project,
     subagent: s.subagent,
     phase: s.phase,
+    task: s.task ?? null,
     start: s.start,
     end: s.end,
     minutes: s.start && s.end ? (s.end - s.start) / 60000 : null,
@@ -95,6 +96,34 @@ export function sessionMetrics(s, custom = {}) {
 // Nearest-rank: the smallest value at or above the p-th of the sorted sample, so the
 // p50 of two sessions is the lower of the two rather than the higher.
 const q = (xs, p) => (xs.length ? [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.max(0, Math.ceil(p * xs.length) - 1))] : null)
+
+// A QRSPI run goes through its phases in this order, and a run's table reads in it.
+// A session of the run whose first prompt named no phase sorts last.
+export const PHASE_ORDER = ['Questions', 'Research', 'Design', 'Structure', 'Plan', 'Implement']
+
+// One row per (task, phase): the unit qrspi's own measure-run.mjs reports, which is the
+// only unit where "tokens per completed task" — KPI 3 — means anything. A free-form
+// session is not a task, and a session that named no `thoughts/<id>` is not in a run.
+export function runs(ms) {
+  const byTask = new Map()
+  for (const m of ms) {
+    if (!m.task || !m.turns) continue
+    if (!byTask.has(m.task)) byTask.set(m.task, new Map())
+    const phases = byTask.get(m.task)
+    const key = m.phase ?? ''
+    if (!phases.has(key)) phases.set(key, [])
+    phases.get(key).push(m)
+  }
+  const order = (p) => (p === '' ? PHASE_ORDER.length : PHASE_ORDER.indexOf(p) === -1 ? PHASE_ORDER.length : PHASE_ORDER.indexOf(p))
+  return [...byTask.keys()]
+    .sort()
+    .map((task) => {
+      const phases = [...byTask.get(task).keys()]
+        .sort((a, b) => order(a) - order(b) || a.localeCompare(b))
+        .map((phase) => ({ phase: phase || null, ...aggregate(byTask.get(task).get(phase)) }))
+      return { task, phases, total: aggregate([...byTask.get(task).values()].flat()) }
+    })
+}
 
 // The Monday of the UTC week a timestamp falls in, as YYYY-MM-DD. UTC on purpose: a
 // week that moves with the reader's timezone is not a week anybody can compare.

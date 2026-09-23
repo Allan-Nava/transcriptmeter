@@ -3,17 +3,8 @@
 // its first word or two.
 import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
-import { commandPrefix, toolResultText } from './common.mjs'
+import { MACHINE, commandPrefix, phaseOf, taskOf, toolResultText } from './common.mjs'
 
-// How a QRSPI phase is actually named in a first prompt: "run the questions phase",
-// "start with the Questions phase", "You are in the **Questions** phase". The literal
-// template form was the only one this matched until 2026-09-23, and no real transcript
-// uses it — 125 first prompts named a phase, none were recognised.
-const PHASE = /\b(questions|research|design|structure|plan|implement)\b\W{0,4}phase\b/i
-
-// Not every `user` entry is a person. The harness delivers hook output, command echoes
-// and background-task events through the same type, wrapped in a tag of their own.
-const MACHINE = /^\s*<(task-notification|system-reminder|command-name|command-message|command-args|local-command-stdout|local-command-stderr|ci-monitor-event|user-prompt-submit-hook)\b/
 
 export function readClaudeSession(file, cap = 8000) {
   let lines
@@ -37,6 +28,7 @@ export function readClaudeSession(file, cap = 8000) {
     commands: {}, // Bash prefix → chars
     overCap: 0,
     phase: null,
+    task: null, // the `thoughts/<id>` a first prompt names, when it names one
     userMessages: 0,
     compactions: 0,
     compactionsAt: [], // when, so a miss can be blamed on the one that caused it
@@ -116,9 +108,9 @@ export function readClaudeSession(file, cap = 8000) {
       for (const c of blocks) {
         if (c.type === 'text' && !MACHINE.test(c.text ?? '')) {
           human = true
-          if (!s.phase && s.userMessages === 0) {
-            const p = PHASE.exec(c.text ?? '')
-            if (p) s.phase = p[1][0].toUpperCase() + p[1].slice(1).toLowerCase()
+          if (s.userMessages === 0) {
+            s.phase ??= phaseOf(c.text)
+            s.task ??= taskOf(c.text)
           }
         }
         if (c.type === 'tool_result') {

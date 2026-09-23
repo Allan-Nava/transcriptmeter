@@ -93,10 +93,11 @@ and one Codex session's with Codex's own `/status`, and the differences explaine
 
 ## v0.2.0 — Beyond one machine <!-- ms: phase=next -->
 
-- [ ] **TM-11 — Per-task view for QRSPI runs**: group the sessions of one
-  `thoughts/<task>/` run by phase, print the run's KPIs 1, 3 and 4 as one table — what
-  qrspi's `scripts/measure-run.mjs` does today, so that script can point here.
-  <!-- tm: prio=med size=M labels=metrics,enhancement -->
+- [x] **TM-11 — Per-task view for QRSPI runs**: `runs` groups by the `thoughts/<task>`
+  the first prompt names, orders by phase and ends on the whole run — KPI 1 as peak p50,
+  KPI 3 as the run's tokens, KPI 4 as cache. Both readers take the task id and the phase
+  from the first prompt, keeping the identifier and never the prompt.
+  <!-- tm: prio=med size=M labels=metrics,enhancement ver=main -->
 - [ ] **TM-12 — Codex prices**: a dated table once a citable source exists; until then
   `--prices`. <!-- tm: prio=low size=S labels=metrics -->
 - [x] **TM-13 — A weekly trend**: `weeks`, one row per Monday-to-Sunday week in UTC —
