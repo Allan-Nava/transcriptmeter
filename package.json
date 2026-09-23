@@ -1,6 +1,6 @@
 {
   "name": "transcriptmeter",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "What your agent sessions cost, from the transcripts on your disk: tokens by class, cache hit ratio, peak context, estimated cost, tool output by command — for Claude Code and Codex CLI, sizes only, nothing leaves the machine.",
   "type": "module",
   "bin": { "transcriptmeter": "bin/transcriptmeter.mjs" },
@@ -11,7 +11,7 @@
     "backlog": "node scripts/backlog.mjs lint && node scripts/backlog.mjs check",
     "build:site": "node site/build.mjs"
   },
-  "repository": { "type": "git", "url": "https://github.com/Allan-Nava/transcriptmeter" },
+  "repository": { "type": "git", "url": "git+https://github.com/Allan-Nava/transcriptmeter.git" },
   "homepage": "https://allan-nava.github.io/transcriptmeter/",
   "bugs": "https://github.com/Allan-Nava/transcriptmeter/issues",
   "keywords": ["claude-code", "codex", "transcripts", "token-efficiency", "prompt-caching", "cost", "context-engineering", "cli"],

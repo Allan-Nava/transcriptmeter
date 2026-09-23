@@ -5,6 +5,11 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 
 ## [Unreleased]
 
+## [0.1.0] — 2026-09-23
+
+The first published release. What changed since 0.0.1 is above all TM-8: the numbers were
+compared against sources that are not this tool, and two of them were wrong.
+
 ### Added
 - `--since` refuses a value it cannot read (exit 2) instead of silently dropping every
   session; the parser lives in `bin/lib/args.mjs` and is tested (TM-6).

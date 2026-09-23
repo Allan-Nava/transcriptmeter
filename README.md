@@ -18,7 +18,7 @@ npx transcriptmeter tools --cap 8000
 npx transcriptmeter prices           # the list-price table and its date
 ```
 
-> **Status: working, measured on one machine, not yet released.** The readers follow the
+> **Status: 0.1.0, measured and cross-checked on one machine.** The readers follow the
 > field shapes of Claude Code 2.1.280 and Codex CLI 0.155.1 as read on 2026-09-23. The
 > deduplication rule that makes the Claude Code numbers right — one API response is
 > written as several lines with the same `requestId` — is the kind of fact this tool
