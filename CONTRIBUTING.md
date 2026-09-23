@@ -13,8 +13,8 @@ npm run backlog && npm run build:site
 
 1. Confirm the shape on a real file with a keys-only script (see `CLAUDE.md`, "Facts
    the code depends on") — never paste a real transcript anywhere.
-2. Extend `test/make-fixtures.mjs` with the shape, regenerate `test/fixtures/`, write the
-   assertion first.
+2. Extend `scripts/make-fixtures.mjs` with the shape, regenerate `test/fixtures/` and
+   commit the result — CI regenerates and fails on a diff — and write the assertion first.
 3. Date the fact in `CLAUDE.md`.
 
 ## Prices
@@ -37,7 +37,7 @@ the `TM-n` id, a CHANGELOG line under `[Unreleased]`.
 
 ## Releasing
 
-Same runbook as trimhook: bump `package.json`, cut `[Unreleased]` into `[x.y.z] — date`,
+Bump `package.json`, cut `[Unreleased]` into `[x.y.z] — date`,
 `ver=main` → `ver=x.y.z`, regenerate the roadmap, land it by pull request, then
 `git tag transcriptmeter--v{version} && git push origin transcriptmeter--v{version}`.
 The first version is published by hand (`npm publish --access public`), then the trusted

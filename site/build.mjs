@@ -24,7 +24,8 @@ const md = readFileSync(join(ROOT, 'README.md'), 'utf8')
 // One logo, three consumers: the favicon (inlined), the header, the hero.
 const logo = readFileSync(join(ROOT, 'assets', 'logo.svg'), 'utf8')
 const favicon = `data:image/svg+xml,${encodeURIComponent(logo.replace(/\n\s*/g, '').replace(/<title>.*?<\/title>/, ''))}`
-const mark = (size, cls) => logo.replace('<svg', `<svg class="${cls}" width="${size}" height="${size}"`)
+// The file's own width/height go, or the inlined tag carries two of each.
+const mark = (size, cls) => logo.replace(/\s(?:width|height)="\d+"/g, '').replace('<svg', `<svg class="${cls}" width="${size}" height="${size}"`)
 
 marked.setOptions({ mangle: false, headerIds: false })
 
@@ -109,9 +110,10 @@ const { lede, after } = parseIntro(intro)
 // tagline sits under it. Splitting here is what keeps the page from repeating the
 // tagline twice and from hard-coding either half.
 const [name, tagline = ''] = title.split(/\s+—\s+/)
-// The wordmark: the second half of the name in the accent colour, the way the
-// README's logo splits it. `transcriptmeter` → transcript·meter.
-const wordmark = /^(.*?)(meter|gate|hook|spi)$/i.exec(name)
+// The wordmark: the tail of the name in the accent colour, the way the sibling
+// repos split theirs. `transcriptmeter` → transcript·meter. A lazy `.+?` so a name
+// that is only the suffix keeps a head to colour against.
+const wordmark = /^(.+?)(meter|gate|hook|lens|sim)$/i.exec(name)
 const brandHtml = wordmark ? `${esc(wordmark[1])}<span>${esc(wordmark[2])}</span>` : esc(name)
 
 // A meta description is a sentence, not a paragraph: markdown out, one sentence,

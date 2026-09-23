@@ -11,6 +11,30 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 - Edge tests: `--project`, `--cap`, `--prices` on an unpriced model, malformed lines,
   empty files, sessions without API turns, a root that does not exist (TM-6).
 
+### Fixed
+- `tools --cap N` counted results over a hard-coded 8,000 characters and only changed the
+  heading, so `--cap 2000` printed the 8,000 figure under a 2,000 heading; the cap is now
+  applied while reading, and the line no longer calls every tool result a shell result.
+  The JSON field is `overCap`, with the `cap` it was counted at beside it (TM-15).
+- The Codex reader was chosen for any root with a `sessions` segment in its path, so a
+  `CLAUDE_CONFIG_DIR` containing that word was read with the wrong reader; a `sessions`
+  directory now has to be laid out by year (TM-16).
+- An `assistant` entry whose `content` was not a block list lost its `usage` to a guard
+  that ran before the accounting (TM-16).
+- The p50 of an even number of sessions was the upper of the two middle values; the
+  percentile is nearest-rank (TM-16).
+- `test/make-fixtures.mjs` ran as part of `node --test` and rewrote the fixtures the
+  tests were about to read, so the committed fixtures were never the ones under test.
+  It is `scripts/make-fixtures.mjs` now, and CI regenerates and fails on a diff (TM-16).
+- The site no longer carries hookgate's branding: the header wordmark and the `<title>`,
+  Open Graph, Twitter and JSON-LD strings are derived from the README's H1 instead of the
+  scaffolding they were copied from, so the headline is no longer printed twice; the
+  eyebrow says CLI, not "Claude Code plugin"; the dead hooks inventory is gone; and the
+  `og:image` is emitted only when `assets/social-preview.png` has been rendered from
+  `assets/social-preview.html`, instead of pointing at a 404 (TM-14).
+- Release notes told the reader to `/plugin install` transcriptmeter and to set
+  `TYPESAFE_API_KEY`; they now say `npx transcriptmeter` (TM-14).
+
 ## [0.0.1] — 2026-09-23
 
 Not published: the first working CLI, measured on one machine.

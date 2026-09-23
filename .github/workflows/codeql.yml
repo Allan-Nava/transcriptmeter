@@ -1,7 +1,8 @@
 name: CodeQL
 
-# Static analysis of the one runtime file tree the plugin ships. A hook runs with the
-# user's permissions on every tool call; the bar for what lands in bin/ is high.
+# Static analysis of the one runtime file tree the package ships. The CLI reads whole
+# transcript trees off the user's disk with their permissions; the bar for what lands
+# in bin/ is high.
 
 on:
   push:

@@ -31,6 +31,19 @@ jobs:
       - run: node bin/transcriptmeter.mjs --roots test/fixtures/claude,test/fixtures/codex --json | node -e 'const o=JSON.parse(require("fs").readFileSync(0,"utf8"));if(!(o.sessions>=2&&o.tokens.total>0))process.exit(1)'
       - run: node bin/transcriptmeter.mjs sessions --roots test/fixtures/claude,test/fixtures/codex | grep -c "│" >/dev/null
 
+  # The fixtures are committed and the tests read them as they are; nothing regenerates
+  # them during a test run, or a generator that drifted from the shapes it claims to
+  # write would still be testing itself. This is what catches the drift.
+  fixtures:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: node scripts/make-fixtures.mjs
+      - run: git diff --exit-code -- test/fixtures
+
   pack:
     runs-on: ubuntu-latest
     steps:
