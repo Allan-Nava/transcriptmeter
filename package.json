@@ -1,6 +1,6 @@
 {
   "name": "transcriptmeter",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "What your agent sessions cost, from the transcripts on your disk: tokens by class, cache hit ratio, peak context, estimated cost, tool output by command — for Claude Code and Codex CLI, sizes only, nothing leaves the machine.",
   "type": "module",
   "bin": { "transcriptmeter": "bin/transcriptmeter.mjs" },

@@ -24,7 +24,7 @@
 - [x] **TM-6** — Fixtures and tests · med · S · tests · `0.1.0`
 - [x] **TM-7** — Repo operating model · low · S · project, release · `0.1.0`
 - [x] **TM-8** — Cross-check the totals · high · S · benchmark · `0.1.0`
-- [x] **TM-9** — Attribute each cache miss to a cause · med · M · metrics · `main`
+- [x] **TM-9** — Attribute each cache miss to a cause · med · M · metrics · `0.2.0`
 - [x] **TM-10** — First release 0.1.0 · med · S · release · `0.1.0`
 - [x] **TM-14** — Clear the hookgate leftovers · high · S · docs, project · `0.1.0`
 - [x] **TM-15** — `--cap` is the cap that is counted · high · S · metrics · `0.1.0`
@@ -32,12 +32,12 @@
 
 ## v0.2.0 — Beyond one machine
 
-- [x] **TM-11** — Per-task view for QRSPI runs · med · M · metrics, enhancement · `main`
+- [x] **TM-11** — Per-task view for QRSPI runs · med · M · metrics, enhancement · `0.2.0`
 - [ ] **TM-12** — Codex prices · low · S · metrics
-- [x] **TM-13** — A weekly trend · low · M · enhancement · `main`
+- [x] **TM-13** — A weekly trend · low · M · enhancement · `0.2.0`
 
 ## v0.3.0 — What the cross-check left open
 
 - [ ] **TM-17** — The cost figure against the harness's own · high · S · benchmark
-- [x] **TM-18** — A command prefix that is a program name or nothing · med · S · metrics · `main`
-- [x] **TM-19** — A machine turn is a shape, not a list · med · S · reader · `main`
+- [x] **TM-18** — A command prefix that is a program name or nothing · med · S · metrics · `0.2.0`
+- [x] **TM-19** — A machine turn is a shape, not a list · med · S · reader · `0.2.0`
