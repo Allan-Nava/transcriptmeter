@@ -4,14 +4,15 @@
 
 > This page is **generated** from [BACKLOG.md](BACKLOG.md), the single source of truth for planned work. Regenerate it with `node scripts/backlog.mjs roadmap` after editing the backlog — CI fails when the two disagree.
 
-**16 items · 9 shipped · 7 open · 2 milestones.**
+**19 items · 10 shipped · 9 open · 3 milestones.**
 
 ## At a glance
 
 | Milestone | Phase | Progress | Open | Shipped |
 |---|---|---|---|---|
-| **v0.1.0 — Numbers you can trust** | now | `#######...` 69% | 4 | 9 |
+| **v0.1.0 — Numbers you can trust** | now | `########..` 77% | 3 | 10 |
 | **v0.2.0 — Beyond one machine** | next | `..........` 0% | 3 | 0 |
+| **v0.3.0 — What the cross-check left open** | later | `..........` 0% | 3 | 0 |
 
 ## v0.1.0 — Numbers you can trust
 
@@ -22,7 +23,7 @@
 - [x] **TM-5** — The CLI · med · S · enhancement · `main`
 - [x] **TM-6** — Fixtures and tests · med · S · tests · `main`
 - [x] **TM-7** — Repo operating model · low · S · project, release · `main`
-- [ ] **TM-8** — Cross-check the totals · high · S · benchmark
+- [x] **TM-8** — Cross-check the totals · high · S · benchmark · `main`
 - [ ] **TM-9** — Attribute each cache miss to a cause · med · M · metrics
 - [ ] **TM-10** — First release 0.1.0 · med · S · release
 - [x] **TM-14** — Clear the hookgate leftovers · high · S · docs, project · `main`
@@ -34,3 +35,9 @@
 - [ ] **TM-11** — Per-task view for QRSPI runs · med · M · metrics, enhancement
 - [ ] **TM-12** — Codex prices · low · S · metrics
 - [ ] **TM-13** — A weekly trend · low · M · enhancement
+
+## v0.3.0 — What the cross-check left open
+
+- [ ] **TM-17** — The cost figure against the harness's own · high · S · benchmark
+- [ ] **TM-18** — A command prefix that survives a line continuation · med · S · metrics
+- [ ] **TM-19** — The machine-turn tags are a dated list · med · S · reader

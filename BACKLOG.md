@@ -56,9 +56,12 @@ and one Codex session's with Codex's own `/status`, and the differences explaine
 - [x] **TM-7 — Repo operating model**: check, CI on Node 18/20/22/24, release by tag over
   OIDC, Pages from the README, backlog with the one-way issue sync.
   <!-- tm: prio=low size=S labels=project,release ver=main -->
-- [ ] **TM-8 — Cross-check the totals**: one Claude Code session against `/usage`, one
-  Codex session against `/status`; record both in the README with the differences and
-  their reasons. **Gates the release.** <!-- tm: prio=high size=S labels=benchmark -->
+- [x] **TM-8 — Cross-check the totals**: peak context of one Claude Code session against
+  the app's own context card at the same moment (0.4% apart), and every Codex response's
+  prompt and output against the `total_tokens` Codex writes itself and `/status` sums
+  (27 of 27 exact). Recorded in the README under "Cross-checked", with the two assumptions
+  it proved wrong. The cost figure against the harness's own `/cost` is TM-17.
+  <!-- tm: prio=high size=S labels=benchmark ver=main -->
 - [ ] **TM-9 — Attribute each cache miss to a cause**: model switch, compaction, a gap
   longer than the TTL (from timestamps and the 5 m / 1 h write split), a tool-set change
   (an MCP server appearing in `tool_use` names) — or unknown, counted honestly.
@@ -96,3 +99,24 @@ and one Codex session's with Codex's own `/status`, and the differences explaine
   `--prices`. <!-- tm: prio=low size=S labels=metrics -->
 - [ ] **TM-13 — A weekly trend**: the summary per week for the last N weeks, so a change
   in habits (a new plugin, a new cap) shows as a step. <!-- tm: prio=low size=M labels=enhancement -->
+
+## v0.3.0 — What the cross-check left open <!-- ms: phase=later -->
+
+TM-8 compared the numbers against sources that are not this tool and found two wrong
+assumptions in the process. What it could not reach, and what the audit noted in passing,
+lives here.
+
+- [ ] **TM-17 — The cost figure against the harness's own**: Claude Code's `/cost` and
+  Codex's `/status` report a session's cost themselves. Both are interactive, so the
+  comparison needs a person to run them on a named session and paste two numbers; record
+  the difference and its reason in the README beside the other two.
+  <!-- tm: prio=high size=S labels=benchmark -->
+- [ ] **TM-18 — A command prefix that survives a line continuation**: `commandPrefix`
+  takes the first word of what it is given, and a multi-line command begins with `\`, so
+  a backslash appears in the top-commands table as though it were a program.
+  <!-- tm: prio=med size=S labels=metrics -->
+- [ ] **TM-19 — The machine-turn tags are a dated list**: a `user` entry that opens with
+  `<task-notification>` and its siblings is not a person, and the list of tags is read off
+  today's transcripts. A tag that appears later is silently counted as a human message;
+  decide whether the rule should be "opens with a tag this tool did not write" instead.
+  <!-- tm: prio=med size=S labels=reader -->
