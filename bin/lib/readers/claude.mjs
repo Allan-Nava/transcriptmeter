@@ -3,7 +3,7 @@
 // its first word or two.
 import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
-import { MACHINE, commandPrefix, phaseOf, taskOf, toolResultText } from './common.mjs'
+import { commandPrefix, isMachineTurn, phaseOf, taskOf, toolResultText } from './common.mjs'
 
 
 export function readClaudeSession(file, cap = 8000) {
@@ -106,7 +106,7 @@ export function readClaudeSession(file, cap = 8000) {
       let human = false
       if (e.isCompactSummary) blocks.length = 0
       for (const c of blocks) {
-        if (c.type === 'text' && !MACHINE.test(c.text ?? '')) {
+        if (c.type === 'text' && !isMachineTurn(c.text)) {
           human = true
           if (s.userMessages === 0) {
             s.phase ??= phaseOf(c.text)

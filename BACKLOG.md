@@ -116,12 +116,15 @@ lives here.
   comparison needs a person to run them on a named session and paste two numbers; record
   the difference and its reason in the README beside the other two.
   <!-- tm: prio=high size=S labels=benchmark -->
-- [ ] **TM-18 — A command prefix that survives a line continuation**: `commandPrefix`
-  takes the first word of what it is given, and a multi-line command begins with `\`, so
-  a backslash appears in the top-commands table as though it were a program.
-  <!-- tm: prio=med size=S labels=metrics -->
-- [ ] **TM-19 — The machine-turn tags are a dated list**: a `user` entry that opens with
-  `<task-notification>` and its siblings is not a person, and the list of tags is read off
-  today's transcripts. A tag that appears later is silently counted as a human message;
-  decide whether the rule should be "opens with a tag this tool did not write" instead.
-  <!-- tm: prio=med size=S labels=reader -->
+- [x] **TM-18 — A command prefix that is a program name or nothing**: it was the first
+  word of whatever it was given — a backslash, a comment, a leftover `&&`, an opening
+  brace, an absolute path, a fragment of somebody's shell line. 2,450 of 28,388 on the
+  author's machine, some of them printing a path, which rule 1 does not allow. Now: the
+  noise is skipped, a path is cut to its last segment, and what still is not a program
+  name is `?`. <!-- tm: prio=med size=S labels=metrics ver=main -->
+- [x] **TM-19 — A machine turn is a shape, not a list**: the list had already drifted
+  when it was written — `<bash-input>`, `<local-command-caveat>` and `<create-pr-command>`
+  were missing, 62 turns counted as people. A turn whose whole content is one element,
+  opening on a hyphenated tag and closing on it, is the harness: 224 of the 280 tagged
+  turns. The named list stays for the ones that open with a tag and do not close on it,
+  and a pasted `<html>` is still a person. <!-- tm: prio=med size=S labels=reader ver=main -->

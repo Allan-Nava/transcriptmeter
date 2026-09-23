@@ -23,10 +23,11 @@ bin/lib/readers/claude.mjs   ~/.claude/projects/<slug>/*.jsonl → one session o
                           counted once per requestId; tool_result sizes matched to tool_use
 bin/lib/readers/codex.mjs    ~/.codex/sessions/y/m/d/rollout-*.jsonl → the same shape;
                           token_usage_record per response, model from world_state/turn_context
-bin/lib/readers/common.mjs   toolResultText, commandPrefix (first word or two, cd hops
-                          skipped), phaseOf/taskOf (a first prompt reduced to a phase
-                          name and a thoughts/<id>), MACHINE (a `user` entry the harness
-                          wrote, not a person)
+bin/lib/readers/common.mjs   toolResultText, commandPrefix (a program name and its
+                          subcommand, paths cut to the last segment, `?` when it is not
+                          a program name), phaseOf/taskOf (a first prompt reduced to a
+                          phase name and a thoughts/<id>), isMachineTurn (a `user` entry
+                          the harness wrote, by shape rather than by a list of tags)
 bin/lib/discover.mjs      roots, discovery, which reader per root
 bin/lib/args.mjs          the --since parser, pure and tested
 bin/lib/metrics.mjs       sessionMetrics (KPIs, cost, misses and their causes, switches)
@@ -76,8 +77,10 @@ ephemeral_1h_input_tokens}`, `service_tier`, `speed`. Subagent transcripts are
 model value to ignore. **A human turn writes `message.content` as a plain string**, not a
 block list (verified over 161 files, 2026-09-23); the block list is what an assistant turn
 and a `tool_result` turn use. Machine-written `user` entries exist with the same type and
-open with a tag — `<task-notification>`, `<system-reminder>`, `<command-name>`,
-`<local-command-stdout>`, `<ci-monitor-event>`. A QRSPI phase is named in a person's own
+are one element wrapped in a hyphenated tag — `<task-notification>`, `<system-reminder>`,
+`<command-name>`, `<local-command-stdout>`, `<ci-monitor-event>`, `<bash-input>`,
+`<local-command-caveat>`, `<create-pr-command>`; the list drifts, the shape does not
+(224 of 280 tagged turns, 2026-09-23). A QRSPI phase is named in a person's own
 words ("run the questions phase"), never in the skill template's.
 
 **Codex sessions** (0.155.1, 2026-09-23): `session_meta` (`session_id`, `cwd`, `cli_version`,

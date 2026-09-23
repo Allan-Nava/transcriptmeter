@@ -4,7 +4,7 @@
 
 > This page is **generated** from [BACKLOG.md](BACKLOG.md), the single source of truth for planned work. Regenerate it with `node scripts/backlog.mjs roadmap` after editing the backlog — CI fails when the two disagree.
 
-**19 items · 14 shipped · 5 open · 3 milestones.**
+**19 items · 16 shipped · 3 open · 3 milestones.**
 
 ## At a glance
 
@@ -12,7 +12,7 @@
 |---|---|---|---|---|
 | **v0.1.0 — Numbers you can trust** | now | `#########.` 92% | 1 | 12 |
 | **v0.2.0 — Beyond one machine** | next | `#######...` 67% | 1 | 2 |
-| **v0.3.0 — What the cross-check left open** | later | `..........` 0% | 3 | 0 |
+| **v0.3.0 — What the cross-check left open** | later | `#######...` 67% | 1 | 2 |
 
 ## v0.1.0 — Numbers you can trust
 
@@ -39,5 +39,5 @@
 ## v0.3.0 — What the cross-check left open
 
 - [ ] **TM-17** — The cost figure against the harness's own · high · S · benchmark
-- [ ] **TM-18** — A command prefix that survives a line continuation · med · S · metrics
-- [ ] **TM-19** — The machine-turn tags are a dated list · med · S · reader
+- [x] **TM-18** — A command prefix that is a program name or nothing · med · S · metrics · `main`
+- [x] **TM-19** — A machine turn is a shape, not a list · med · S · reader · `main`

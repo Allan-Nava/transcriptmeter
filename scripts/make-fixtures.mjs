@@ -20,10 +20,14 @@ const claude = [
   // named the way a person names it, not the way the skill's template does.
   // A first prompt names the phase in a person's words and the task by its thoughts/ path.
   base('user', 0, { message: { role: 'user', content: 'kick off the research phase for thoughts/TM-1-transcript-meter/' } }),
-  // Same entry type, not a person: this must not be counted as a human message.
+  // Same entry type, not a person: neither of these may be counted as a human message.
+  // The first is a tag the reader knows; the second is one it does not, caught by its
+  // shape — a turn that is one element, opening on a tag and closing on it.
   base('user', 0, { message: { role: 'user', content: '<task-notification>\n<event>a background task finished</event>\n</task-notification>' } }),
+  base('user', 0, { message: { role: 'user', content: '<some-future-tag>whatever the harness relays next</some-future-tag>' } }),
   base('assistant', 1, { requestId: 'req_1', message: { role: 'assistant', model: 'claude-opus-5', usage: usage(12000, 0, 30000, 0, 800), content: [{ type: 'text', text: 'running tests' }] } }),
-  base('assistant', 1, { requestId: 'req_1', message: { role: 'assistant', model: 'claude-opus-5', usage: usage(12000, 0, 30000, 0, 800), content: [{ type: 'tool_use', id: 'tu1', name: 'Bash', input: { command: 'cd /Users/dev/app && npm test -- --grep x' } }] } }),
+  // A hop, a line continuation and a comment in front of the command that actually ran.
+  base('assistant', 1, { requestId: 'req_1', message: { role: 'assistant', model: 'claude-opus-5', usage: usage(12000, 0, 30000, 0, 800), content: [{ type: 'tool_use', id: 'tu1', name: 'Bash', input: { command: 'cd /Users/dev/app && \\\n  # run the one test\n  npm test -- --grep x' } }] } }),
   base('user', 2, { message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu1', content: 'x'.repeat(12000) }] } }),
   base('assistant', 3, { message: { role: 'assistant', model: 'claude-opus-5', usage: usage(3000, 42000, 4000, 0, 500), content: [{ type: 'tool_use', id: 'tu2', name: 'Read', input: { file_path: '/Users/dev/app/a.js' } }] } }),
   base('user', 4, { message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu2', content: [{ type: 'text', text: 'y'.repeat(3000) }] }] } }),
