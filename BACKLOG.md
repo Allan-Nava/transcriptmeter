@@ -99,8 +99,10 @@ and one Codex session's with Codex's own `/status`, and the differences explaine
   <!-- tm: prio=med size=M labels=metrics,enhancement -->
 - [ ] **TM-12 — Codex prices**: a dated table once a citable source exists; until then
   `--prices`. <!-- tm: prio=low size=S labels=metrics -->
-- [ ] **TM-13 — A weekly trend**: the summary per week for the last N weeks, so a change
-  in habits (a new plugin, a new cap) shows as a step. <!-- tm: prio=low size=M labels=enhancement -->
+- [x] **TM-13 — A weekly trend**: `weeks`, one row per Monday-to-Sunday week in UTC —
+  sessions, turns, tokens, cache hit ratio, peak p50, misses and the cause most of them
+  were pinned on, cost. Sessions that never reached the API are left out: they have no
+  number to trend. <!-- tm: prio=low size=M labels=enhancement ver=main -->
 
 ## v0.3.0 — What the cross-check left open <!-- ms: phase=later -->
 

@@ -15,6 +15,7 @@ npx transcriptmeter                  # totals across sessions, both harnesses
 npx transcriptmeter sessions --since 7d
 npx transcriptmeter session <file or id>
 npx transcriptmeter tools --cap 8000
+npx transcriptmeter weeks --since 8w    # one row per week
 npx transcriptmeter prices           # the list-price table and its date
 ```
 
@@ -34,6 +35,7 @@ npx transcriptmeter prices           # the list-price table and its date
 | **Peak context** per session, p50 and p95 across sessions | max prompt size over the session | KPI 1: the 40% rule is about this number |
 | Estimated cost at list prices, dated | the price table in `bin/lib/prices.mjs` | what the session would bill on an API key; on a subscription it is the size of what the plan absorbed |
 | Tool results by tool, shell results by command prefix, results over a cap | `tool_result` sizes matched to `tool_use` | where the context went; the input to a trimming policy such as [trimhook](https://github.com/Allan-Nava/trimhook) |
+| The same figures per week, one row each | the session's own end date, bucketed by the Monday in UTC | a change in habits shows as a step; a monthly total hides it |
 | QRSPI phase, when the first prompt names one | the phase prompt's own words | one session per phase means one row per phase — the run's KPIs read straight off the table |
 
 Unpriced models — every Codex model today — get tokens and a `—` in the cost column, and
@@ -90,6 +92,32 @@ fixtures and the fixtures encoded the assumption.
 What is still unchecked: the **cost** figure against what the harness itself reports for
 the same session (Claude Code's `/cost`, Codex's `/status`). Both are interactive, so the
 comparison needs a person to run them and paste two numbers — TM-17.
+
+## A change in habits, as a step
+
+`weeks` is the same numbers bucketed by the Monday they fall in, UTC. Same machine, same
+day, `--since 8w --no-subagents`:
+
+```
+## 8 weeks, 2026-08-03 to 2026-09-21
+│ week       │ sessions │ turns  │ tokens        │ cache │ peak p50 │ misses │ mostly        │ cost     │
+├────────────┼──────────┼────────┼───────────────┼───────┼──────────┼────────┼───────────────┼──────────┤
+│ 2026-08-03 │ 7        │ 1,418  │ 641,980,288   │ 96%   │ 122,021  │ 40     │ unknown       │ $604.62  │
+│ 2026-08-10 │ 7        │ 1,606  │ 576,222,082   │ 97%   │ 341,727  │ 25     │ unknown       │ $494.33  │
+│ 2026-08-17 │ 2        │ 206    │ 31,217,132    │ 98%   │ 231,631  │ 0      │ —             │ $29.06   │
+│ 2026-08-24 │ 2        │ 480    │ 129,816,838   │ 99%   │ 243,585  │ 2      │ cache expired │ $92.19   │
+│ 2026-08-31 │ 30       │ 4,021  │ 1,061,803,880 │ 97%   │ 200,363  │ 37     │ cache expired │ $947.42  │
+│ 2026-09-07 │ 29       │ 10,383 │ 4,420,623,549 │ 98%   │ 159,279  │ 105    │ cache expired │ $3269.03 │
+│ 2026-09-14 │ 21       │ 969    │ 253,710,473   │ 97%   │ 66,907   │ 9      │ cache expired │ $245.38  │
+│ 2026-09-21 │ 52       │ 14,112 │ 6,192,890,983 │ 98%   │ 49,474   │ 126    │ cache expired │ $4355.87 │
+
+Weeks start on Monday, UTC. Sessions that never reached the API are left out.
+```
+
+The p50 of the peak context falls from 341,727 in the second week to 49,474 in the last
+while the turns go up tenfold — that is a working habit changing, and it is the kind of
+thing a total for the month hides completely. The `mostly` column is the cause most of
+that week's misses were pinned on.
 
 ## Install
 

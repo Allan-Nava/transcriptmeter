@@ -6,6 +6,10 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 ## [Unreleased]
 
 ### Added
+- `weeks`: the same figures bucketed by the Monday they fall in, UTC, one row each —
+  sessions, turns, tokens, cache hit ratio, peak p50, misses with the cause most of them
+  were pinned on, and cost. A change in habits shows as a step where a monthly total
+  hides it. Sessions that never reached the API are left out (TM-13).
 - Every cache miss after a warm prefix is attributed to a cause — compaction, model
   switch, an entry past the TTL its write asked for, a tool the session had not used
   before, or unknown, which is counted rather than pinned on the nearest plausible one.

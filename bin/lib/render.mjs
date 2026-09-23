@@ -51,6 +51,30 @@ export function renderSession(m) {
   ].filter(Boolean).join('\n')
 }
 
+// A trend is only readable if every row is the same shape: one line per week, the
+// columns in the order you would ask about them — how much work, how much of it was
+// cached, how big it got, what went wrong, what it cost.
+export function renderWeeks(weeks) {
+  if (!weeks.length) return 'No week has a session that reached the API.'
+  const rows = weeks.map((w) => [
+    w.week,
+    k(w.sessions),
+    k(w.turns),
+    k(w.tokens.total),
+    pct(w.cacheHitRatio),
+    k(w.peakP50),
+    k(w.misses),
+    MISS_CAUSES.filter((c) => w.missCauses[c] > 0).sort((a, b) => w.missCauses[b] - w.missCauses[a])[0] ?? '—',
+    usd(w.cost),
+  ])
+  return [
+    `## ${k(weeks.length)} weeks, ${weeks[0].week} to ${weeks[weeks.length - 1].week}`,
+    table(['week', 'sessions', 'turns', 'tokens', 'cache', 'peak p50', 'misses', 'mostly', 'cost'], rows),
+    '',
+    'Weeks start on Monday, UTC. Sessions that never reached the API are left out.',
+  ].join('\n')
+}
+
 export function renderTools(a, cap) {
   const tools = Object.entries(a.tools).sort((x, y) => y[1].chars - x[1].chars)
   const top = Object.entries(a.commands).sort((x, y) => y[1] - x[1]).slice(0, 15)
