@@ -21,6 +21,15 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
   222 of 278 misses are an expired entry: idle time, priced as a full re-read (TM-9).
 
 ### Fixed
+- A shell command's prefix is a program name or `?`. It was the first word of whatever it
+  was given, so a line continuation, a comment, a leftover `&&`, an opening brace or an
+  absolute path took its place — 2,450 of 28,388 on the author's machine — and some of
+  them printed a path out of the command, which the tool's first rule forbids. Paths are
+  now cut to their last segment and a fragment is reported as `?` rather than printed
+  (TM-18).
+- A `user` entry written by the harness is recognised by its shape — one element, opening
+  on a hyphenated tag and closing on it — instead of by a list of tag names that had
+  already gone stale by the time it was written (TM-19).
 - A compaction summary is a `user` entry with prose in it, written by the harness, and
   was counted as a human message — one per compaction (TM-9).
 
@@ -42,6 +51,15 @@ numbers were compared against sources that are not this tool, and two of them we
   itself (27 of 27 exact) (TM-8).
 
 ### Fixed
+- A shell command's prefix is a program name or `?`. It was the first word of whatever it
+  was given, so a line continuation, a comment, a leftover `&&`, an opening brace or an
+  absolute path took its place — 2,450 of 28,388 on the author's machine — and some of
+  them printed a path out of the command, which the tool's first rule forbids. Paths are
+  now cut to their last segment and a fragment is reported as `?` rather than printed
+  (TM-18).
+- A `user` entry written by the harness is recognised by its shape — one element, opening
+  on a hyphenated tag and closing on it — instead of by a list of tag names that had
+  already gone stale by the time it was written (TM-19).
 - **Human messages were never counted and a QRSPI phase was never recognised.** A human
   turn writes `message.content` as a plain string in a real transcript; the reader only
   read the block list the fixtures used, so `userMessages` was 0 for every real session

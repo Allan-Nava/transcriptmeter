@@ -5,7 +5,7 @@ import { test } from 'node:test'
 import { kindOf, loadSessions } from '../bin/lib/discover.mjs'
 import { aggregate, runs, sessionMetrics, weekOf, weekly } from '../bin/lib/metrics.mjs'
 import { costOf, priceFor } from '../bin/lib/prices.mjs'
-import { commandPrefix } from '../bin/lib/readers/common.mjs'
+import { commandPrefix, isMachineTurn } from '../bin/lib/readers/common.mjs'
 import { renderRuns, renderSession, renderSessions, renderSummary, renderTools, renderWeeks } from '../bin/lib/render.mjs'
 
 const HERE = new URL('.', import.meta.url).pathname
@@ -27,6 +27,33 @@ test('commandPrefix keeps a first word or two and skips cd hops', () => {
   assert.equal(commandPrefix('cd /x && npm test -- --grep a'), 'npm test')
   assert.equal(commandPrefix('K=1 ssh host'), 'ssh')
   assert.equal(commandPrefix('git -C /x status'), 'git')
+})
+
+// 2,450 of 28,388 Bash prefixes on the author's machine were not a program name on
+// 2026-09-23: continuations, comments, leftover operators, absolute paths — and some
+// of them printed a path out of somebody's command, which rule 1 does not allow.
+test('commandPrefix reaches the program past the noise, and says ? rather than guess', () => {
+  assert.equal(commandPrefix('cd /x && \\\n  npm test'), 'npm test', 'a line continuation')
+  assert.equal(commandPrefix('# what this does\nls -la'), 'ls', 'a comment line')
+  assert.equal(commandPrefix('&& make build'), 'make build', 'a leftover operator')
+  assert.equal(commandPrefix('{ echo a; }'), 'echo', 'a brace group')
+  assert.equal(commandPrefix('/usr/bin/python3 docs/scripts/nav-lint.py'), 'python3 nav-lint.py', 'paths cut to their last segment')
+  assert.equal(commandPrefix('docs/scripts/new-release.sh'), 'new-release.sh')
+  assert.equal(commandPrefix('$S/token.txt)'), '?', 'a fragment is not a command')
+  assert.equal(commandPrefix(''), '?')
+})
+
+// A list of tags is read off one machine on one day. This repository's own list had
+// already drifted by the time it was written — <bash-input>, <local-command-caveat> and
+// <create-pr-command> were missing — so the rule is the shape, not the name.
+test('a machine turn is recognised by its shape, not by a list that goes stale', () => {
+  assert.equal(isMachineTurn('<task-notification>\n<event>x</event>\n</task-notification>'), true)
+  assert.equal(isMachineTurn('<some-future-tag>relayed</some-future-tag>'), true, 'a tag no list knows')
+  assert.equal(isMachineTurn('<bash-input>ls</bash-input>'), true)
+  assert.equal(isMachineTurn('rewrite this <div> the way I said'), false)
+  assert.equal(isMachineTurn('<html>a page I pasted</html>'), false, 'no hyphen: not a harness tag')
+  assert.equal(isMachineTurn('<system-reminder>cut off mid'), true, 'opens with a known tag')
+  assert.equal(isMachineTurn(''), false)
 })
 
 test('the Claude Code reader: turns, cache classes, tools, commands, phase, subagent, unknown model', () => {
