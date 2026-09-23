@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="currentColor">
+  <title>transcriptmeter</title>
+  <rect x="12" y="38" width="8" height="12" rx="2" opacity=".6"/>
+  <rect x="24" y="30" width="8" height="20" rx="2" opacity=".75"/>
+  <rect x="36" y="22" width="8" height="28" rx="2" opacity=".9"/>
+  <rect x="48" y="14" width="8" height="36" rx="2"/>
+  <path d="M10 52 H56" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity=".5" fill="none"/>
+</svg>

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # `node >=18`, no dependencies. Run the check on the floor and on every later line
+  # without `npm install`, so both claims are tested rather than stated.
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 20, 22, 24]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+      - run: npm test
+      # The CLI against its own fixtures: a summary, a sessions table and JSON, no home
+      # directory involved, so the run is the same on every machine.
+      - run: node bin/transcriptmeter.mjs --roots test/fixtures/claude,test/fixtures/codex --json | node -e 'const o=JSON.parse(require("fs").readFileSync(0,"utf8"));if(!(o.sessions>=2&&o.tokens.total>0))process.exit(1)'
+      - run: node bin/transcriptmeter.mjs sessions --roots test/fixtures/claude,test/fixtures/codex | grep -c "│" >/dev/null
+
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      # What `npm publish` would actually ship.
+      - run: npm pack --dry-run
+
+  # BACKLOG.md is the single source of truth; ROADMAP.md is generated from it and the
+  # issues are synced from it. A stale roadmap fails here; the planner's decisions are
+  # asserted against a fixture, because a wrong decision opens duplicates or closes
+  # open work on a public repository.
+  backlog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: node scripts/backlog.mjs lint
+      - run: node scripts/backlog.mjs check
+      - run: node scripts/backlog_test.mjs
