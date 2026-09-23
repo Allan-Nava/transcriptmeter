@@ -4,14 +4,14 @@
 
 > This page is **generated** from [BACKLOG.md](BACKLOG.md), the single source of truth for planned work. Regenerate it with `node scripts/backlog.mjs roadmap` after editing the backlog — CI fails when the two disagree.
 
-**19 items · 13 shipped · 6 open · 3 milestones.**
+**19 items · 14 shipped · 5 open · 3 milestones.**
 
 ## At a glance
 
 | Milestone | Phase | Progress | Open | Shipped |
 |---|---|---|---|---|
 | **v0.1.0 — Numbers you can trust** | now | `#########.` 92% | 1 | 12 |
-| **v0.2.0 — Beyond one machine** | next | `###.......` 33% | 2 | 1 |
+| **v0.2.0 — Beyond one machine** | next | `#######...` 67% | 1 | 2 |
 | **v0.3.0 — What the cross-check left open** | later | `..........` 0% | 3 | 0 |
 
 ## v0.1.0 — Numbers you can trust
@@ -32,7 +32,7 @@
 
 ## v0.2.0 — Beyond one machine
 
-- [ ] **TM-11** — Per-task view for QRSPI runs · med · M · metrics, enhancement
+- [x] **TM-11** — Per-task view for QRSPI runs · med · M · metrics, enhancement · `main`
 - [ ] **TM-12** — Codex prices · low · S · metrics
 - [x] **TM-13** — A weekly trend · low · M · enhancement · `main`
 

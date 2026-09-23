@@ -17,13 +17,16 @@ BACKLOG.md as the single source of truth, releases by tag, the same prose conven
 ## Layout
 
 ```
-bin/transcriptmeter.mjs   the CLI: summary · sessions · session · tools · weeks · prices
-                          · check
+bin/transcriptmeter.mjs   the CLI: summary · sessions · session · tools · runs · weeks
+                          · prices · check
 bin/lib/readers/claude.mjs   ~/.claude/projects/<slug>/*.jsonl → one session object; usage
                           counted once per requestId; tool_result sizes matched to tool_use
 bin/lib/readers/codex.mjs    ~/.codex/sessions/y/m/d/rollout-*.jsonl → the same shape;
                           token_usage_record per response, model from world_state/turn_context
-bin/lib/readers/common.mjs   toolResultText, commandPrefix (first word or two, cd hops skipped)
+bin/lib/readers/common.mjs   toolResultText, commandPrefix (first word or two, cd hops
+                          skipped), phaseOf/taskOf (a first prompt reduced to a phase
+                          name and a thoughts/<id>), MACHINE (a `user` entry the harness
+                          wrote, not a person)
 bin/lib/discover.mjs      roots, discovery, which reader per root
 bin/lib/args.mjs          the --since parser, pure and tested
 bin/lib/metrics.mjs       sessionMetrics (KPIs, cost, misses and their causes, switches)

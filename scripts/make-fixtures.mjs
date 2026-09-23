@@ -18,7 +18,8 @@ const usage = (input, read, w5, w1, out) => ({ input_tokens: input, cache_creati
 const claude = [
   // A human turn's content is a plain string in a real transcript — and the phase is
   // named the way a person names it, not the way the skill's template does.
-  base('user', 0, { message: { role: 'user', content: 'kick off the research phase for TM-1' } }),
+  // A first prompt names the phase in a person's words and the task by its thoughts/ path.
+  base('user', 0, { message: { role: 'user', content: 'kick off the research phase for thoughts/TM-1-transcript-meter/' } }),
   // Same entry type, not a person: this must not be counted as a human message.
   base('user', 0, { message: { role: 'user', content: '<task-notification>\n<event>a background task finished</event>\n</task-notification>' } }),
   base('assistant', 1, { requestId: 'req_1', message: { role: 'assistant', model: 'claude-opus-5', usage: usage(12000, 0, 30000, 0, 800), content: [{ type: 'text', text: 'running tests' }] } }),

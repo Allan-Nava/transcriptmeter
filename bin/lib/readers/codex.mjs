@@ -2,7 +2,7 @@
 // {type, payload}; `token_usage_record` carries this response's usage, where
 // `input_tokens` is the whole prompt and `cached_input_tokens` the part served from cache.
 import { readFileSync } from 'node:fs'
-import { commandPrefix, toolResultText } from './common.mjs'
+import { commandPrefix, phaseOf, taskOf, toolResultText } from './common.mjs'
 
 export function readCodexSession(file, cap = 8000) {
   let lines
@@ -11,7 +11,7 @@ export function readCodexSession(file, cap = 8000) {
   } catch {
     return null
   }
-  const s = { harness: 'codex', file, id: null, project: null, version: null, subagent: false, start: null, end: null, models: {}, turns: [], tools: {}, commands: {}, overCap: 0, phase: null, userMessages: 0, compactions: 0 }
+  const s = { harness: 'codex', file, id: null, project: null, version: null, subagent: false, start: null, end: null, models: {}, turns: [], tools: {}, commands: {}, overCap: 0, phase: null, task: null, userMessages: 0, compactions: 0 }
   let model = null
   const calls = new Map()
   for (const line of lines) {
@@ -43,7 +43,14 @@ export function readCodexSession(file, cap = 8000) {
       if (model) s.models[model] = (s.models[model] ?? 0) + 1
     } else if (e.type === 'response_item' && p.type === 'message' && p.role === 'user') {
       const texts = (p.content ?? []).filter((c) => c.type === 'input_text' && !/^<(skills_instructions|recommended_plugins|multi_agent|environment_context|permissions_instructions)/.test(c.text ?? ''))
-      if (texts.length) s.userMessages++
+      if (texts.length) {
+        // The same two facts the Claude reader takes from a first prompt.
+        if (s.userMessages === 0) {
+          s.phase ??= phaseOf(texts[0].text)
+          s.task ??= taskOf(texts[0].text)
+        }
+        s.userMessages++
+      }
     } else if (e.type === 'response_item' && (p.type === 'custom_tool_call' || p.type === 'function_call')) {
       const input = String(p.input ?? p.arguments ?? '')
       const cmd = /exec_command\(\{cmd:\s*"((?:[^"\\]|\\.)*)"/.exec(input)?.[1] ?? null

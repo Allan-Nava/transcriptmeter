@@ -3,10 +3,10 @@ import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { kindOf, loadSessions } from '../bin/lib/discover.mjs'
-import { aggregate, sessionMetrics, weekOf, weekly } from '../bin/lib/metrics.mjs'
+import { aggregate, runs, sessionMetrics, weekOf, weekly } from '../bin/lib/metrics.mjs'
 import { costOf, priceFor } from '../bin/lib/prices.mjs'
 import { commandPrefix } from '../bin/lib/readers/common.mjs'
-import { renderSession, renderSessions, renderSummary, renderTools, renderWeeks } from '../bin/lib/render.mjs'
+import { renderRuns, renderSession, renderSessions, renderSummary, renderTools, renderWeeks } from '../bin/lib/render.mjs'
 
 const HERE = new URL('.', import.meta.url).pathname
 const CLAUDE = join(HERE, 'fixtures', 'claude')
@@ -77,7 +77,22 @@ test('the Codex reader: prompt split into cached and uncached, model from world_
 test('a human turn is read as a string or as blocks, and machine turns are not human', () => {
   const [s] = loadSessions([CLAUDE]).map((m) => sessionMetrics(m)).filter((m) => m.id === 'sess-claude-1')
   assert.equal(s.phase, 'Research', 'named in prose, not in the skill template\'s words')
+  assert.equal(s.task, 'TM-1-transcript-meter', 'the id out of the thoughts/ path, not the prompt')
   assert.equal(s.userMessages, 2)
+})
+
+// The unit where "tokens per completed task" means anything: one QRSPI run, read down
+// its phases. A session that named no task is not in a run at all.
+test('runs: grouped by thoughts/<task>, ordered by phase, with the whole run on the last line', () => {
+  const ms = loadSessions([CLAUDE, CODEX]).map((s) => sessionMetrics(s))
+  const rs = runs(ms)
+  assert.equal(rs.length, 1)
+  assert.equal(rs[0].task, 'TM-1-transcript-meter')
+  assert.deepEqual(rs[0].phases.map((p) => p.phase), ['Research'])
+  assert.equal(rs[0].total.turns, 3)
+  assert.match(renderRuns(rs), /## TM-1-transcript-meter/)
+  assert.match(renderRuns(rs), /— whole run/)
+  assert.match(renderRuns([]), /No session names a thoughts\/<task>/)
 })
 
 // Every miss is pinned on the thing that caused it, or on nothing — a guess would be
@@ -145,6 +160,7 @@ test('CLI: summary, sessions, session, tools, --json, --since, --harness, --no-s
   assert.match(run('session', 'sess-codex-1').stdout, /codex session sess-codex-1/)
   assert.equal(run('session', 'nope').status, 1)
   assert.match(run('tools').stdout, /Top shell commands/)
+  assert.equal(JSON.parse(run('runs', '--json').stdout).length, 1)
   const weeks = JSON.parse(run('weeks', '--json').stdout)
   assert.equal(weeks.length, 1, 'every fixture session lands in the same week')
   assert.equal(weeks[0].week, '2026-09-14')
