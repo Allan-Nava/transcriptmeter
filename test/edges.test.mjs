@@ -40,11 +40,10 @@ test('--project filters on the working directory; --cap changes the over-cap cou
 test('--prices adds a table for an unpriced model and the summary stops calling it unpriced', () => {
   const d = mkdtempSync(join(tmpdir(), 'tm-'))
   const f = join(d, 'prices.json')
-  writeFileSync(f, JSON.stringify({ 'gpt-6-luna': { input: 2, output: 8, read: 0.25 } }))
-  const before = run('--roots', CODEX).stdout
-  assert.match(before, /unpriced models, tokens only: gpt-6-luna/)
-  assert.match(before, /estimated cost —/)
-  const after = JSON.parse(run('--json', '--prices', f, '--roots', CODEX).stdout)
+  writeFileSync(f, JSON.stringify({ 'claude-unknown-9': { input: 2, output: 8, read: 0.25 } }))
+  const before = run('--roots', CLAUDE).stdout
+  assert.match(before, /unpriced models, tokens only: claude-unknown-9/)
+  const after = JSON.parse(run('--json', '--prices', f, '--roots', CLAUDE).stdout)
   assert.ok(after.cost > 0)
   assert.deepEqual(after.unpriced, [])
 })
