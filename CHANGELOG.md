@@ -11,7 +11,23 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 - Edge tests: `--project`, `--cap`, `--prices` on an unpriced model, malformed lines,
   empty files, sessions without API turns, a root that does not exist (TM-6).
 
+### Added
+- Cross-checked the totals against sources that are not this tool and recorded both
+  comparisons in the README: one session's peak context against the app's own context
+  card (0.4% apart) and every Codex response against the `total_tokens` Codex writes
+  itself (27 of 27 exact) (TM-8).
+
 ### Fixed
+- **Human messages were never counted and a QRSPI phase was never recognised.** A human
+  turn writes `message.content` as a plain string in a real transcript; the reader only
+  read the block list the fixtures used, so `userMessages` was 0 for every real session
+  and the phase prompt was never seen. The phase regex also matched only the skill
+  template's exact words, which no person types. Both shapes are in the fixtures now
+  (TM-8).
+- A `user` entry written by the harness — `<task-notification>` and its siblings — is no
+  longer counted as a human message (TM-8).
+- Sessions that were opened and never reached the API are counted apart in the summary
+  instead of sitting in the same figure as the sessions that cost something (TM-8).
 - `tools --cap N` counted results over a hard-coded 8,000 characters and only changed the
   heading, so `--cap 2000` printed the 8,000 figure under a 2,000 heading; the cap is now
   applied while reading, and the line no longer calls every tool result a shell result.

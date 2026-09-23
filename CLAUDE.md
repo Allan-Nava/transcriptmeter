@@ -68,7 +68,12 @@ BACKLOG.md / ROADMAP.md   source of truth / generated view; scripts/backlog.mjs
 `cache_read_input_tokens`, `output_tokens`, `cache_creation.{ephemeral_5m_input_tokens,
 ephemeral_1h_input_tokens}`, `service_tier`, `speed`. Subagent transcripts are
 `agent-*.jsonl` in the same project directory, `isSidechain: true`. `<synthetic>` is a
-model value to ignore.
+model value to ignore. **A human turn writes `message.content` as a plain string**, not a
+block list (verified over 161 files, 2026-09-23); the block list is what an assistant turn
+and a `tool_result` turn use. Machine-written `user` entries exist with the same type and
+open with a tag — `<task-notification>`, `<system-reminder>`, `<command-name>`,
+`<local-command-stdout>`, `<ci-monitor-event>`. A QRSPI phase is named in a person's own
+words ("run the questions phase"), never in the skill template's.
 
 **Codex sessions** (0.155.1, 2026-09-23): `session_meta` (`session_id`, `cwd`, `cli_version`,
 `model_provider`), `world_state.state.collaboration_mode.model`, `turn_context.model`,

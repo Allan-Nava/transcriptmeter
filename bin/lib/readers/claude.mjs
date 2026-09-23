@@ -5,7 +5,15 @@ import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 import { commandPrefix, toolResultText } from './common.mjs'
 
-const PHASE = /You are in the \*\*(Questions|Research|Design|Structure|Plan|Implement)\*\* phase/
+// How a QRSPI phase is actually named in a first prompt: "run the questions phase",
+// "start with the Questions phase", "You are in the **Questions** phase". The literal
+// template form was the only one this matched until 2026-09-23, and no real transcript
+// uses it — 125 first prompts named a phase, none were recognised.
+const PHASE = /\b(questions|research|design|structure|plan|implement)\b\W{0,4}phase\b/i
+
+// Not every `user` entry is a person. The harness delivers hook output, command echoes
+// and background-task events through the same type, wrapped in a tag of their own.
+const MACHINE = /^\s*<(task-notification|system-reminder|command-name|command-message|command-args|local-command-stdout|local-command-stderr|ci-monitor-event|user-prompt-submit-hook)\b/
 
 export function readClaudeSession(file, cap = 8000) {
   let lines
@@ -58,6 +66,11 @@ export function readClaudeSession(file, cap = 8000) {
     // content is not a block list still cost what it cost.
     const m = e.message
     if (!m) continue
+    // A human turn carries `content` as a plain string in a real transcript and as a
+    // block list in a synthetic one — both shapes are in the wild (2026-09-23, 161
+    // files). Reading only the block list counted no human messages at all and never
+    // matched a QRSPI phase prompt.
+    const blocks = typeof m.content === 'string' ? [{ type: 'text', text: m.content }] : Array.isArray(m.content) ? m.content : []
     if (e.type === 'assistant') {
       const u = m.usage
       const rid = e.requestId ?? m.id ?? null
@@ -76,15 +89,15 @@ export function readClaudeSession(file, cap = 8000) {
         })
         if (m.model) s.models[m.model] = (s.models[m.model] ?? 0) + 1
       }
-      if (Array.isArray(m.content)) for (const c of m.content) if (c.type === 'tool_use') uses.set(c.id, { name: c.name, command: c.name === 'Bash' ? commandPrefix(c.input?.command) : null })
-    } else if (e.type === 'user' && Array.isArray(m.content)) {
+      for (const c of blocks) if (c.type === 'tool_use') uses.set(c.id, { name: c.name, command: c.name === 'Bash' ? commandPrefix(c.input?.command) : null })
+    } else if (e.type === 'user') {
       let human = false
-      for (const c of m.content) {
-        if (c.type === 'text') {
+      for (const c of blocks) {
+        if (c.type === 'text' && !MACHINE.test(c.text ?? '')) {
           human = true
           if (!s.phase && s.userMessages === 0) {
             const p = PHASE.exec(c.text ?? '')
-            if (p) s.phase = p[1]
+            if (p) s.phase = p[1][0].toUpperCase() + p[1].slice(1).toLowerCase()
           }
         }
         if (c.type === 'tool_result') {

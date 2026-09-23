@@ -16,7 +16,7 @@ export function renderSummary(a, { since, cap = 8000 } = {}) {
   const top = Object.entries(a.commands).sort((x, y) => y[1] - x[1]).slice(0, 8)
   const tools = Object.entries(a.tools).sort((x, y) => y[1].chars - x[1].chars).slice(0, 6)
   return [
-    `## ${k(a.sessions)} sessions${since ? ` since ${since}` : ''} · ${Object.entries(a.harnesses).map(([h, n]) => `${h} ${k(n)}`).join(', ')}${a.subagents ? ` · ${k(a.subagents)} subagent` : ''} · ${k(a.turns)} API turns`,
+    `## ${k(a.sessions)} sessions${since ? ` since ${since}` : ''} · ${Object.entries(a.harnesses).map(([h, n]) => `${h} ${k(n)}`).join(', ')}${a.subagents ? ` · ${k(a.subagents)} subagent` : ''} · ${k(a.turns)} API turns${a.noTurns ? ` · ${k(a.noTurns)} opened and never reached the API` : ''}`,
     `tokens: ${k(a.tokens.total)} total — uncached input ${k(a.tokens.input)} · cache read ${k(a.tokens.cacheRead)} · cache write ${k(a.tokens.write5m + a.tokens.write1h)} (${k(a.tokens.write1h)} at 1h) · output ${k(a.tokens.output)}`,
     `cache hit ratio ${pct(a.cacheHitRatio)} · cache misses after a warm prefix ${k(a.misses)} · model switches ${k(a.modelSwitches)} · compactions ${k(a.compactions)}`,
     `peak context per session: p50 ${k(a.peakP50)} · p95 ${k(a.peakP95)} tokens`,

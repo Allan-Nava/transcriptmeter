@@ -49,7 +49,7 @@ test('the Claude Code reader: turns, cache classes, tools, commands, phase, suba
   assert.equal(s1.overCap, 1)
   assert.equal(s1.commands['npm test'], 12000)
   assert.ok(s1.cost > 0)
-  assert.equal(s1.userMessages, 2)
+  assert.equal(s1.userMessages, 2, 'the two people-written turns; the task notification is not one')
   assert.equal(ms[0].subagent, true)
   assert.equal(ms[2].cost, null, 'unknown model: tokens but no dollars')
   assert.equal(ms[2].write1h, 500)
@@ -69,6 +69,15 @@ test('the Codex reader: prompt split into cached and uncached, model from world_
   assert.equal(m.commands['git log'], 9000)
   assert.equal(m.overCap, 1)
   assert.equal(m.userMessages, 1)
+})
+
+// Both shapes are in the wild: a real transcript writes a human turn's content as a
+// plain string, the block list is what a synthetic one used. Reading only the list
+// counted no human messages at all and never matched a phase prompt.
+test('a human turn is read as a string or as blocks, and machine turns are not human', () => {
+  const [s] = loadSessions([CLAUDE]).map((m) => sessionMetrics(m)).filter((m) => m.id === 'sess-claude-1')
+  assert.equal(s.phase, 'Research', 'named in prose, not in the skill template\'s words')
+  assert.equal(s.userMessages, 2)
 })
 
 test('aggregate and render', () => {

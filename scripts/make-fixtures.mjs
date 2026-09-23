@@ -16,7 +16,11 @@ const ts = (m) => new Date(t0 + m * 60000).toISOString()
 const base = (type, m, extra) => ({ type, sessionId: 'sess-claude-1', timestamp: ts(m), cwd: '/Users/dev/app', version: '2.1.280', isSidechain: false, ...extra })
 const usage = (input, read, w5, w1, out) => ({ input_tokens: input, cache_creation_input_tokens: w5 + w1, cache_read_input_tokens: read, output_tokens: out, cache_creation: { ephemeral_5m_input_tokens: w5, ephemeral_1h_input_tokens: w1 }, service_tier: 'standard' })
 const claude = [
-  base('user', 0, { message: { role: 'user', content: [{ type: 'text', text: 'You are in the **Research** phase of the QRSPI workflow.' }] } }),
+  // A human turn's content is a plain string in a real transcript — and the phase is
+  // named the way a person names it, not the way the skill's template does.
+  base('user', 0, { message: { role: 'user', content: 'kick off the research phase for TM-1' } }),
+  // Same entry type, not a person: this must not be counted as a human message.
+  base('user', 0, { message: { role: 'user', content: '<task-notification>\n<event>a background task finished</event>\n</task-notification>' } }),
   base('assistant', 1, { requestId: 'req_1', message: { role: 'assistant', model: 'claude-opus-5', usage: usage(12000, 0, 30000, 0, 800), content: [{ type: 'text', text: 'running tests' }] } }),
   base('assistant', 1, { requestId: 'req_1', message: { role: 'assistant', model: 'claude-opus-5', usage: usage(12000, 0, 30000, 0, 800), content: [{ type: 'tool_use', id: 'tu1', name: 'Bash', input: { command: 'cd /Users/dev/app && npm test -- --grep x' } }] } }),
   base('user', 2, { message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: 'tu1', content: 'x'.repeat(12000) }] } }),
