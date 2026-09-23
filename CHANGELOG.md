@@ -5,20 +5,22 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-09-23
+
+Three ways of reading the same transcripts that 0.1.0 did not have — a run, a week, and
+the cause of every cache miss — two counts that were wrong, one of which printed more than
+this tool is allowed to print, and a price for the Codex models.
+
+The tag was pushed at the commit that carries the Codex prices, so they ship in 0.2.0 and
+are listed here rather than left under Unreleased describing a tarball that already has
+them.
+
 ### Added
 - Codex models are priced. The five ids Codex reports come from OpenAI's own pricing page,
   dated with the rest of the table, and each carries its own write multipliers because
   writing a cache entry is free there — inheriting Anthropic's 1.25×/2× would have
   overcharged it. `estimated cost` no longer says "unpriced models, tokens only" for a
   Codex session (TM-12).
-
-## [0.2.0] — 2026-09-23
-
-Three ways of reading the same transcripts that 0.1.0 did not have — a run, a week, and
-the cause of every cache miss — and two counts that were wrong, one of which printed more
-than this tool is allowed to print.
-
-### Added
 - `runs`: the sessions of one `thoughts/<task>` QRSPI run, grouped by phase and ending on
   the whole run — KPI 1 as the peak p50, KPI 3 as the run's tokens, KPI 4 as cache. The
   task id comes from the first prompt, which is reduced to that identifier and a phase
