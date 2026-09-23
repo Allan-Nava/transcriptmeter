@@ -6,6 +6,7 @@
 //   transcriptmeter sessions           one row per session
 //   transcriptmeter session <file|id>  one session in detail
 //   transcriptmeter tools              tool results by tool and by shell command
+//   transcriptmeter weeks              one row per week: a change in habits as a step
 //   transcriptmeter prices             the price table and its date
 //   transcriptmeter check              validate this package
 //
@@ -36,13 +37,13 @@ const cmd = positional[0] ?? 'summary'
 
 async function main() {
   if (cmd === 'check') return check()
-  if (cmd === 'help' || flag('--help')) return console.log(readFileSync(join(ROOT, 'bin', 'transcriptmeter.mjs'), 'utf8').split('\n').slice(1, 18).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
+  if (cmd === 'help' || flag('--help')) return console.log(readFileSync(join(ROOT, 'bin', 'transcriptmeter.mjs'), 'utf8').split('\n').slice(1, 19).map((l) => l.replace(/^\/\/ ?/, '')).join('\n'))
   const { PRICES, PRICES_DATE } = await import('./lib/prices.mjs')
   if (cmd === 'prices') return console.log(`list prices, USD per million tokens, ${PRICES_DATE}\n${Object.entries(PRICES).map(([m, p]) => `  ${m.padEnd(20)} input ${p.input} · output ${p.output} · cache read ×${p.read}`).join('\n')}`)
   const { defaultRoots, loadSessions } = await import('./lib/discover.mjs')
   const { sinceMs } = await import('./lib/args.mjs')
-  const { aggregate, sessionMetrics } = await import('./lib/metrics.mjs')
-  const { renderSession, renderSessions, renderSummary, renderTools } = await import('./lib/render.mjs')
+  const { aggregate, sessionMetrics, weekly } = await import('./lib/metrics.mjs')
+  const { renderSession, renderSessions, renderSummary, renderTools, renderWeeks } = await import('./lib/render.mjs')
   const custom = opt('--prices') ? JSON.parse(readFileSync(opt('--prices'), 'utf8')) : {}
   const roots = opt('--roots') ? opt('--roots').split(',').map((r) => resolve(r)) : defaultRoots()
   const since = sinceMs(opt('--since'))
@@ -66,6 +67,10 @@ async function main() {
       process.exit(1)
     }
     return console.log(flag('--json') ? JSON.stringify(m, null, 2) : renderSession(m))
+  }
+  if (cmd === 'weeks') {
+    const w = weekly(ms)
+    return console.log(flag('--json') ? JSON.stringify(w, null, 2) : renderWeeks(w))
   }
   const a = aggregate(ms)
   if (cmd === 'sessions') return console.log(flag('--json') ? JSON.stringify(ms, null, 2) : renderSessions(ms))

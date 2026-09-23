@@ -17,7 +17,8 @@ BACKLOG.md as the single source of truth, releases by tag, the same prose conven
 ## Layout
 
 ```
-bin/transcriptmeter.mjs   the CLI: summary · sessions · session · tools · prices · check
+bin/transcriptmeter.mjs   the CLI: summary · sessions · session · tools · weeks · prices
+                          · check
 bin/lib/readers/claude.mjs   ~/.claude/projects/<slug>/*.jsonl → one session object; usage
                           counted once per requestId; tool_result sizes matched to tool_use
 bin/lib/readers/codex.mjs    ~/.codex/sessions/y/m/d/rollout-*.jsonl → the same shape;

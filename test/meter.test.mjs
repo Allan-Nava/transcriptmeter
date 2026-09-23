@@ -3,10 +3,10 @@ import { spawnSync } from 'node:child_process'
 import { join } from 'node:path'
 import { test } from 'node:test'
 import { kindOf, loadSessions } from '../bin/lib/discover.mjs'
-import { aggregate, sessionMetrics } from '../bin/lib/metrics.mjs'
+import { aggregate, sessionMetrics, weekOf, weekly } from '../bin/lib/metrics.mjs'
 import { costOf, priceFor } from '../bin/lib/prices.mjs'
 import { commandPrefix } from '../bin/lib/readers/common.mjs'
-import { renderSession, renderSessions, renderSummary, renderTools } from '../bin/lib/render.mjs'
+import { renderSession, renderSessions, renderSummary, renderTools, renderWeeks } from '../bin/lib/render.mjs'
 
 const HERE = new URL('.', import.meta.url).pathname
 const CLAUDE = join(HERE, 'fixtures', 'claude')
@@ -121,6 +121,20 @@ test('--cap is the cap that is counted, not just the one printed', () => {
   assert.match(renderTools(at(2000), 2000), /Tool results over 2,000 characters: 3/)
 })
 
+// A week that moves with the reader's timezone is not a week anybody can compare, so
+// the boundary is Monday in UTC and the label is that Monday.
+test('weeks: Monday in UTC, one row each, and nothing to trend is said rather than drawn', () => {
+  assert.equal(weekOf(Date.parse('2026-09-23T13:00:00Z')), '2026-09-21', 'a Wednesday')
+  assert.equal(weekOf(Date.parse('2026-09-21T00:00:00Z')), '2026-09-21', 'the Monday itself')
+  assert.equal(weekOf(Date.parse('2026-09-20T23:59:59Z')), '2026-09-14', 'the Sunday before')
+
+  const at = (day, over) => ({ turns: 1, end: Date.parse(`2026-09-${day}T12:00:00Z`), peak: 1000, misses: 0, missCauses: {}, models: [], cost: 1, tokens: 0, input: 0, cacheRead: 0, write5m: 0, write1h: 0, output: 0, total: 0, compactions: 0, modelSwitches: 0, overCap: over, tools: {}, commands: {}, harness: 'claude', subagent: false, phase: null })
+  const weeks = weekly([at('23', 0), at('16', 0), at('22', 0), { ...at('15', 0), turns: 0 }])
+  assert.deepEqual(weeks.map((w) => [w.week, w.sessions]), [['2026-09-14', 1], ['2026-09-21', 2]], 'oldest first; the session without turns is not trended')
+  assert.match(renderWeeks(weeks), /2 weeks, 2026-09-14 to 2026-09-21/)
+  assert.match(renderWeeks([]), /No week has a session that reached the API/)
+})
+
 test('CLI: summary, sessions, session, tools, --json, --since, --harness, --no-subagents, check', () => {
   const run = (...args) => spawnSync(process.execPath, [BIN, ...args, '--roots', `${CLAUDE},${CODEX}`], { encoding: 'utf8' })
   const j = JSON.parse(run('--json').stdout)
@@ -131,6 +145,10 @@ test('CLI: summary, sessions, session, tools, --json, --since, --harness, --no-s
   assert.match(run('session', 'sess-codex-1').stdout, /codex session sess-codex-1/)
   assert.equal(run('session', 'nope').status, 1)
   assert.match(run('tools').stdout, /Top shell commands/)
+  const weeks = JSON.parse(run('weeks', '--json').stdout)
+  assert.equal(weeks.length, 1, 'every fixture session lands in the same week')
+  assert.equal(weeks[0].week, '2026-09-14')
+  assert.match(run('weeks').stdout, /Weeks start on Monday, UTC/)
   const capped = JSON.parse(run('tools', '--cap', '2000', '--json').stdout)
   assert.deepEqual([capped.cap, capped.overCap], [2000, 3])
   const check = spawnSync(process.execPath, [BIN, 'check'], { encoding: 'utf8' })

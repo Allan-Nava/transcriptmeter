@@ -96,6 +96,30 @@ export function sessionMetrics(s, custom = {}) {
 // p50 of two sessions is the lower of the two rather than the higher.
 const q = (xs, p) => (xs.length ? [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.max(0, Math.ceil(p * xs.length) - 1))] : null)
 
+// The Monday of the UTC week a timestamp falls in, as YYYY-MM-DD. UTC on purpose: a
+// week that moves with the reader's timezone is not a week anybody can compare.
+export function weekOf(t) {
+  const d = new Date(t)
+  d.setUTCHours(0, 0, 0, 0)
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7))
+  return d.toISOString().slice(0, 10)
+}
+
+// One aggregate per week, oldest first. Sessions that never reached the API are left
+// out: they have no number to trend, and they would swamp the count.
+export function weekly(ms) {
+  const buckets = new Map()
+  for (const m of ms) {
+    if (!m.turns) continue
+    const t = m.end ?? m.start
+    if (!t) continue
+    const w = weekOf(t)
+    if (!buckets.has(w)) buckets.set(w, [])
+    buckets.get(w).push(m)
+  }
+  return [...buckets.keys()].sort().map((week) => ({ week, ...aggregate(buckets.get(week)) }))
+}
+
 export function aggregate(ms) {
   const a = { sessions: ms.length, noTurns: 0, missCauses: Object.fromEntries(MISS_CAUSES.map((c) => [c, 0])), subagents: ms.filter((m) => m.subagent).length, harnesses: {}, turns: 0, tokens: { input: 0, cacheRead: 0, write5m: 0, write1h: 0, output: 0, total: 0 }, cost: 0, pricedSessions: 0, unpriced: new Set(), peaks: [], misses: 0, modelSwitches: 0, compactions: 0, tools: {}, commands: {}, overCap: 0, phases: {} }
   for (const m of ms) {
