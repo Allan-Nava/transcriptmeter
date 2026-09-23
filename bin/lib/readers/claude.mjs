@@ -39,8 +39,13 @@ export function readClaudeSession(file, cap = 8000) {
     phase: null,
     userMessages: 0,
     compactions: 0,
+    compactionsAt: [], // when, so a miss can be blamed on the one that caused it
   }
   const uses = new Map()
+  // A tool name used for the first time is the visible half of a tool-set change:
+  // the definitions that actually invalidate the prefix are not in the transcript.
+  const toolNames = new Set()
+  let lastTurn = null
   // One API response is written as several `assistant` lines — one per content block,
   // same requestId, same usage repeated on each. Count the usage once per response.
   const seen = new Set()
@@ -56,7 +61,11 @@ export function readClaudeSession(file, cap = 8000) {
     if (e.cwd && !s.project) s.project = e.cwd
     if (e.version && !s.version) s.version = e.version
     if (e.isSidechain) s.subagent = true
-    if (e.isCompactSummary) s.compactions++
+    if (e.isCompactSummary) {
+      s.compactions++
+      const at = e.timestamp ? Date.parse(e.timestamp) : NaN
+      if (!Number.isNaN(at)) s.compactionsAt.push(at)
+    }
     const ts = e.timestamp ? Date.parse(e.timestamp) : NaN
     if (!Number.isNaN(ts)) {
       if (s.start === null || ts < s.start) s.start = ts
@@ -78,7 +87,7 @@ export function readClaudeSession(file, cap = 8000) {
       if (rid !== null) seen.add(rid)
       if (!dup && u && typeof u.input_tokens === 'number' && m.model !== '<synthetic>') {
         const cc = u.cache_creation ?? {}
-        s.turns.push({
+        lastTurn = {
           t: ts,
           model: m.model ?? null,
           input: u.input_tokens ?? 0,
@@ -86,12 +95,24 @@ export function readClaudeSession(file, cap = 8000) {
           write5m: cc.ephemeral_5m_input_tokens ?? (u.cache_creation_input_tokens ?? 0),
           write1h: cc.ephemeral_1h_input_tokens ?? 0,
           output: u.output_tokens ?? 0,
-        })
+          newTool: false,
+        }
+        s.turns.push(lastTurn)
         if (m.model) s.models[m.model] = (s.models[m.model] ?? 0) + 1
       }
-      for (const c of blocks) if (c.type === 'tool_use') uses.set(c.id, { name: c.name, command: c.name === 'Bash' ? commandPrefix(c.input?.command) : null })
+      for (const c of blocks) {
+        if (c.type !== 'tool_use') continue
+        uses.set(c.id, { name: c.name, command: c.name === 'Bash' ? commandPrefix(c.input?.command) : null })
+        if (c.name && !toolNames.has(c.name)) {
+          toolNames.add(c.name)
+          if (lastTurn) lastTurn.newTool = true
+        }
+      }
     } else if (e.type === 'user') {
+      // A compaction summary is a `user` entry with prose in it, written by the
+      // harness. Counting it would add one human message per compaction.
       let human = false
+      if (e.isCompactSummary) blocks.length = 0
       for (const c of blocks) {
         if (c.type === 'text' && !MACHINE.test(c.text ?? '')) {
           human = true

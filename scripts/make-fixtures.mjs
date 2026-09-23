@@ -34,6 +34,30 @@ const claude2 = [
   { ...base('user', 100, { message: { role: 'user', content: [{ type: 'text', text: 'hello' }] } }), sessionId: 'sess-claude-2' },
   { ...base('assistant', 101, { message: { role: 'assistant', model: 'claude-unknown-9', usage: usage(1000, 0, 0, 500, 100), content: [{ type: 'text', text: 'hi' }] } }), sessionId: 'sess-claude-2' },
 ]
+// One session per cause: a compaction, a model switch, an entry past its TTL, a tool
+// the session had not used before — and one miss with nothing to blame, which must be
+// counted as unknown rather than pinned on the nearest plausible cause.
+const warm = (m, read, w5, w1 = 0) => c3('assistant', m, { message: { role: 'assistant', model: 'claude-opus-5', usage: usage(1000, read, w5, w1, 100), content: [{ type: 'text', text: 'warm' }] } })
+const cold = (m, input, extra = {}) => c3('assistant', m, { message: { role: 'assistant', model: extra.model ?? 'claude-opus-5', usage: usage(input, 0, 0, 0, 100), content: extra.content ?? [{ type: 'text', text: 'cold' }] } })
+const c3 = (type, m, extra) => ({ ...base(type, m, extra), sessionId: 'sess-claude-3' })
+const misses = [
+  c3('user', 0, { message: { role: 'user', content: 'start' } }),
+  warm(1, 50000, 0),
+  c3('user', 2, { isCompactSummary: true, message: { role: 'user', content: 'a compaction summary stands in for the conversation' } }),
+  cold(3, 60000), //                                    -> compaction
+  warm(4, 60000, 5000),
+  cold(5, 61000, { model: 'claude-sonnet-5' }), //       -> model switch
+  warm(6, 62000, 5000),
+  cold(80, 63000), //  76 minutes after a 5 m write     -> cache expired
+  warm(81, 64000, 5000),
+  // The first use of a tool this session has not used before.
+  c3('assistant', 82, { message: { role: 'assistant', model: 'claude-opus-5', usage: usage(1000, 65000, 5000, 0, 100), content: [{ type: 'tool_use', id: 'tu9', name: 'mcp__newserver__query', input: {} }] } }),
+  cold(83, 66000), //                                   -> new tool
+  warm(84, 67000, 5000),
+  cold(85, 68000), //  nothing to blame                 -> unknown
+]
+mkdirSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app'), { recursive: true })
+writeFileSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app', 'sess-claude-3.jsonl'), j(misses))
 const sub = [{ ...base('assistant', 50, { message: { role: 'assistant', model: 'claude-haiku-4-5-20251001', usage: usage(2000, 0, 0, 0, 300), content: [{ type: 'text', text: 'sub' }] } }), sessionId: 'agent-1', isSidechain: true }]
 mkdirSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app'), { recursive: true })
 writeFileSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app', 'sess-claude-1.jsonl'), j(claude))

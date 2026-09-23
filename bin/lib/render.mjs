@@ -1,4 +1,8 @@
+import { MISS_CAUSES } from './metrics.mjs'
 import { PRICES_DATE } from './prices.mjs'
+
+// "3 compaction · 2 model switch" — only the causes that happened.
+const causes = (m) => MISS_CAUSES.filter((c) => (m?.[c] ?? 0) > 0).map((c) => `${m[c]} ${c}`).join(' · ')
 
 export const k = (n) => (n === null || n === undefined ? '—' : Math.round(n).toLocaleString('en-US'))
 export const pct = (x) => (x === null || x === undefined ? '—' : `${Math.round(x * 100)}%`)
@@ -18,7 +22,7 @@ export function renderSummary(a, { since, cap = 8000 } = {}) {
   return [
     `## ${k(a.sessions)} sessions${since ? ` since ${since}` : ''} · ${Object.entries(a.harnesses).map(([h, n]) => `${h} ${k(n)}`).join(', ')}${a.subagents ? ` · ${k(a.subagents)} subagent` : ''} · ${k(a.turns)} API turns${a.noTurns ? ` · ${k(a.noTurns)} opened and never reached the API` : ''}`,
     `tokens: ${k(a.tokens.total)} total — uncached input ${k(a.tokens.input)} · cache read ${k(a.tokens.cacheRead)} · cache write ${k(a.tokens.write5m + a.tokens.write1h)} (${k(a.tokens.write1h)} at 1h) · output ${k(a.tokens.output)}`,
-    `cache hit ratio ${pct(a.cacheHitRatio)} · cache misses after a warm prefix ${k(a.misses)} · model switches ${k(a.modelSwitches)} · compactions ${k(a.compactions)}`,
+    `cache hit ratio ${pct(a.cacheHitRatio)} · cache misses after a warm prefix ${k(a.misses)}${a.misses ? ` (${causes(a.missCauses)})` : ''} · model switches ${k(a.modelSwitches)} · compactions ${k(a.compactions)}`,
     `peak context per session: p50 ${k(a.peakP50)} · p95 ${k(a.peakP95)} tokens`,
     `estimated cost ${usd(a.cost)} at list prices of ${PRICES_DATE}${a.unpriced.length ? ` — unpriced models, tokens only: ${a.unpriced.join(', ')}` : ''}`,
     `tool results: ${k(a.toolChars)} characters (≈ ${k(a.toolChars / 4)} tokens) · ${k(a.overCap)} results over ${k(cap)} characters · by tool: ${tools.map(([t, v]) => `${t} ${k(v.chars)}`).join(' · ')}`,
@@ -40,7 +44,7 @@ export function renderSession(m) {
     `project ${m.project ?? '—'} · ${day(m.start)} · ${m.minutes === null ? '—' : `${Math.round(m.minutes)} min`} · models ${m.models.join(', ') || '—'}${m.phase ? ` · QRSPI ${m.phase}` : ''}${m.subagent ? ' · subagent' : ''}`,
     `${k(m.turns)} API turns · ${k(m.userMessages)} human messages · ${k(m.compactions)} compactions`,
     `tokens: ${k(m.total)} — uncached input ${k(m.input)} · cache read ${k(m.cacheRead)} · cache write ${k(m.write5m + m.write1h)} · output ${k(m.output)}`,
-    `peak context ${k(m.peak)} · cache hit ratio ${pct(m.cacheHitRatio)} · misses after a warm prefix ${k(m.misses)} · model switches ${k(m.modelSwitches)}`,
+    `peak context ${k(m.peak)} · cache hit ratio ${pct(m.cacheHitRatio)} · misses after a warm prefix ${k(m.misses)}${m.misses ? ` (${causes(m.missCauses)})` : ''} · model switches ${k(m.modelSwitches)}`,
     `estimated cost ${usd(m.cost)}`,
     `tool results ${k(m.toolChars)} characters · over the cap: ${k(m.overCap)}${tools.length ? ` · ${tools.map(([t, v]) => `${t} ${k(v.chars)} (${v.n})`).join(' · ')}` : ''}`,
     top.length ? `top shell commands by result size: ${top.map(([c, n]) => `\`${c}\` ${k(n)}`).join(' · ')}` : '',

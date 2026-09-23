@@ -4,13 +4,13 @@
 
 > This page is **generated** from [BACKLOG.md](BACKLOG.md), the single source of truth for planned work. Regenerate it with `node scripts/backlog.mjs roadmap` after editing the backlog — CI fails when the two disagree.
 
-**19 items · 11 shipped · 8 open · 3 milestones.**
+**19 items · 12 shipped · 7 open · 3 milestones.**
 
 ## At a glance
 
 | Milestone | Phase | Progress | Open | Shipped |
 |---|---|---|---|---|
-| **v0.1.0 — Numbers you can trust** | now | `########..` 85% | 2 | 11 |
+| **v0.1.0 — Numbers you can trust** | now | `#########.` 92% | 1 | 12 |
 | **v0.2.0 — Beyond one machine** | next | `..........` 0% | 3 | 0 |
 | **v0.3.0 — What the cross-check left open** | later | `..........` 0% | 3 | 0 |
 
@@ -24,7 +24,7 @@
 - [x] **TM-6** — Fixtures and tests · med · S · tests · `0.1.0`
 - [x] **TM-7** — Repo operating model · low · S · project, release · `0.1.0`
 - [x] **TM-8** — Cross-check the totals · high · S · benchmark · `0.1.0`
-- [ ] **TM-9** — Attribute each cache miss to a cause · med · M · metrics
+- [x] **TM-9** — Attribute each cache miss to a cause · med · M · metrics · `main`
 - [x] **TM-10** — First release 0.1.0 · med · S · release · `0.1.0`
 - [x] **TM-14** — Clear the hookgate leftovers · high · S · docs, project · `0.1.0`
 - [x] **TM-15** — `--cap` is the cap that is counted · high · S · metrics · `0.1.0`

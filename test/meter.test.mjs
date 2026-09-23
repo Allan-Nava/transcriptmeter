@@ -33,7 +33,7 @@ test('the Claude Code reader: turns, cache classes, tools, commands, phase, suba
   const ss = loadSessions([CLAUDE])
   assert.equal(kindOf(CLAUDE), 'claude')
   const ms = ss.map((s) => sessionMetrics(s)).sort((a, b) => (a.id ?? '').localeCompare(b.id ?? ''))
-  assert.deepEqual(ms.map((m) => m.id), ['agent-1', 'sess-claude-1', 'sess-claude-2'])
+  assert.deepEqual(ms.map((m) => m.id), ['agent-1', 'sess-claude-1', 'sess-claude-2', 'sess-claude-3'])
   const s1 = ms[1]
   assert.equal(s1.turns, 3)
   assert.equal(s1.phase, 'Research')
@@ -80,18 +80,30 @@ test('a human turn is read as a string or as blocks, and machine turns are not h
   assert.equal(s.userMessages, 2)
 })
 
+// Every miss is pinned on the thing that caused it, or on nothing — a guess would be
+// worse than a gap. The fixture holds one of each, in one session.
+test('a cache miss is attributed to its cause, and to unknown when there is none', () => {
+  const [m] = loadSessions([CLAUDE]).map((s) => sessionMetrics(s)).filter((x) => x.id === 'sess-claude-3')
+  assert.equal(m.misses, 5)
+  assert.deepEqual(m.missCauses, { compaction: 1, 'model switch': 1, 'cache expired': 1, 'new tool': 1, unknown: 1 })
+  assert.equal(m.compactions, 1)
+  assert.equal(m.userMessages, 1, 'the compaction summary is not a person')
+  assert.match(renderSession(m), /5 \(1 compaction · 1 model switch · 1 cache expired · 1 new tool · 1 unknown\)/)
+})
+
 test('aggregate and render', () => {
   const ms = loadSessions([CLAUDE, CODEX]).map((s) => sessionMetrics(s))
   const a = aggregate(ms)
-  assert.equal(a.sessions, 4)
+  assert.equal(a.sessions, 5)
   assert.equal(a.subagents, 1)
-  assert.deepEqual(a.harnesses, { claude: 3, codex: 1 })
+  assert.deepEqual(a.harnesses, { claude: 4, codex: 1 })
   assert.deepEqual(a.unpriced.sort(), ['claude-unknown-9', 'gpt-6-luna'])
-  assert.equal(a.tokens.output, 1500 + 100 + 300 + 406)
-  assert.equal(a.misses, 1)
+  assert.equal(a.tokens.output, 1500 + 100 + 300 + 406 + 1100)
+  assert.equal(a.misses, 6, 'one in sess-claude-1, five in sess-claude-3')
+  assert.equal(a.missCauses['model switch'], 2)
   assert.equal(a.phases.Research, 1)
   const sum = renderSummary(a, { since: '7d' })
-  assert.match(sum, /4 sessions since 7d/)
+  assert.match(sum, /5 sessions since 7d/)
   assert.match(sum, /unpriced models, tokens only: claude-unknown-9, gpt-6-luna/)
   assert.match(sum, /`npm test` 12,000/)
   assert.match(renderSessions(ms), /Research/)
@@ -112,8 +124,8 @@ test('--cap is the cap that is counted, not just the one printed', () => {
 test('CLI: summary, sessions, session, tools, --json, --since, --harness, --no-subagents, check', () => {
   const run = (...args) => spawnSync(process.execPath, [BIN, ...args, '--roots', `${CLAUDE},${CODEX}`], { encoding: 'utf8' })
   const j = JSON.parse(run('--json').stdout)
-  assert.equal(j.sessions, 4)
-  assert.equal(JSON.parse(run('sessions', '--json', '--no-subagents').stdout).length, 3)
+  assert.equal(j.sessions, 5)
+  assert.equal(JSON.parse(run('sessions', '--json', '--no-subagents').stdout).length, 4)
   assert.equal(JSON.parse(run('sessions', '--json', '--harness', 'codex').stdout).length, 1)
   assert.equal(JSON.parse(run('sessions', '--json', '--since', '2030-01-01').stdout).length, 0)
   assert.match(run('session', 'sess-codex-1').stdout, /codex session sess-codex-1/)

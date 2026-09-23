@@ -30,7 +30,7 @@ npx transcriptmeter prices           # the list-price table and its date
 |---|---|---|
 | Tokens by class: uncached input, cache read, cache write (5 min and 1 h), output | `usage` on each response, counted once per `requestId` | the sum is what you paid for; the split says whether caching worked |
 | **Cache hit ratio** — cache read over the whole prompt | same | KPI 4 of the `token-efficiency` skill: over 70% in an implement session, or something in the prefix is moving |
-| Cache misses after a warm prefix, model switches, compactions | consecutive responses, `message.model`, `isCompactSummary` | the three things that rebuild the cache; each miss is one full re-read at input price |
+| Cache misses after a warm prefix, **each one attributed to its cause** — compaction, model switch, cache expired, new tool, or honestly unknown | consecutive responses, `message.model`, `isCompactSummary`, the gap against the TTL the write asked for | each miss is one full re-read at input price; the cause is what you would change |
 | **Peak context** per session, p50 and p95 across sessions | max prompt size over the session | KPI 1: the 40% rule is about this number |
 | Estimated cost at list prices, dated | the price table in `bin/lib/prices.mjs` | what the session would bill on an API key; on a subscription it is the size of what the plan absorbed |
 | Tool results by tool, shell results by command prefix, results over a cap | `tool_result` sizes matched to `tool_use` | where the context went; the input to a trimming policy such as [trimhook](https://github.com/Allan-Nava/trimhook) |
@@ -45,22 +45,23 @@ Run on 2026-09-23 over the author's own transcripts, `--since 30d --no-subagents
 only. Not a benchmark of anything but this tool's own output:
 
 ```
-## 1,750 sessions since 30d · claude 1,738, codex 12 · 29,794 API turns · 1,616 opened and never reached the API
-tokens: 11,982,305,492 total — uncached input 182,563 · cache read 11,739,564,813 · cache write 211,345,796 (211,345,796 at 1h) · output 31,212,320
-cache hit ratio 98% · cache misses after a warm prefix 277 · model switches 8 · compactions 35
+## 1,750 sessions since 30d · claude 1,738, codex 12 · 29,889 API turns · 1,616 opened and never reached the API
+tokens: 12,014,017,818 total — uncached input 182,813 · cache read 11,770,505,599 · cache write 212,034,673 (212,034,673 at 1h) · output 31,294,733
+cache hit ratio 98% · cache misses after a warm prefix 278 (3 compaction · 3 model switch · 222 cache expired · 2 new tool · 48 unknown) · model switches 8 · compactions 35
 peak context per session: p50 97,253 · p95 965,951 tokens
-estimated cost $8850.83 at list prices of 2026-09-23 — unpriced models, tokens only: gpt-5.6-terra, gpt-6-luna
-tool results: 27,155,406 characters (≈ 6,788,852 tokens) · 334 results over 8,000 characters · by tool: Bash 24,492,679 · WebFetch 1,073,190 · Read 1,058,862 · Edit 198,282 · Write 97,411 · Agent 53,126
-top shell commands by result size: `sed` 4,549,495 · `echo` 3,016,797 · `grep` 2,555,957 · `python3` 2,400,567 · `cat` 1,951,289 · `for` 1,172,387 · `ssh` 834,913 · `ls` 791,763
+estimated cost $8874.91 at list prices of 2026-09-23 — unpriced models, tokens only: gpt-5.6-terra, gpt-6-luna
+tool results: 27,213,054 characters (≈ 6,803,264 tokens) · 334 results over 8,000 characters · by tool: Bash 24,542,058 · WebFetch 1,073,190 · Read 1,060,871 · Edit 198,282 · Write 97,411 · Agent 54,284
+top shell commands by result size: `sed` 4,553,179 · `echo` 3,025,137 · `grep` 2,556,635 · `python3` 2,404,220 · `cat` 1,962,889 · `for` 1,172,387 · `ssh` 838,162 · `ls` 793,788
 QRSPI phases seen: Questions 80 · Structure 20
 ```
 
 Three things that table says at a glance and no dashboard did: 98% of every prompt token
-was a cache read, so the 277 misses are where the money went; half the sessions that
-reached the API peaked above 97k tokens of context and one in twenty above 960k; and
-shell output is 90% of what the tools ever returned. Every one of those is a decision —
-which misses, which sessions, which commands — and `sessions`, `session` and `tools` are
-the drill-downs.
+was a cache read, so the 278 misses are where the money went — and **222 of them are an
+entry that simply expired**, not a compaction and not a model switch, on a machine whose
+every cache write already asks for the one-hour TTL. That is idle time, priced: come back
+to a session an hour later and the whole prefix is re-read at input price. Half the
+sessions that reached the API peaked above 97k tokens of context and one in twenty above
+960k; and shell output is 90% of what the tools ever returned.
 
 The 1,616 files that never reached the API are sessions opened and abandoned; they cost
 nothing and carry no KPI, so they are counted apart rather than mixed into the p50.
