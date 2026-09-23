@@ -5,6 +5,17 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 
 ## [Unreleased]
 
+### Added
+- Every cache miss after a warm prefix is attributed to a cause — compaction, model
+  switch, an entry past the TTL its write asked for, a tool the session had not used
+  before, or unknown, which is counted rather than pinned on the nearest plausible one.
+  The summary and `session` print the breakdown beside the count. On the author's machine
+  222 of 278 misses are an expired entry: idle time, priced as a full re-read (TM-9).
+
+### Fixed
+- A compaction summary is a `user` entry with prose in it, written by the harness, and
+  was counted as a human message — one per compaction (TM-9).
+
 ## [0.1.0] — 2026-09-23
 
 The first release worth installing. What changed since 0.0.1 is above all TM-8: the

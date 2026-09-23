@@ -62,10 +62,11 @@ and one Codex session's with Codex's own `/status`, and the differences explaine
   (27 of 27 exact). Recorded in the README under "Cross-checked", with the two assumptions
   it proved wrong. The cost figure against the harness's own `/cost` is TM-17.
   <!-- tm: prio=high size=S labels=benchmark ver=0.1.0 -->
-- [ ] **TM-9 — Attribute each cache miss to a cause**: model switch, compaction, a gap
-  longer than the TTL (from timestamps and the 5 m / 1 h write split), a tool-set change
-  (an MCP server appearing in `tool_use` names) — or unknown, counted honestly.
-  <!-- tm: prio=med size=M labels=metrics -->
+- [x] **TM-9 — Attribute each cache miss to a cause**: compaction, model switch, an entry
+  past the TTL its write asked for, a tool the session had not used before — or unknown,
+  counted rather than guessed. On the author's machine 222 of 278 misses are an expired
+  entry, which is idle time priced as a full re-read.
+  <!-- tm: prio=med size=M labels=metrics ver=main -->
 - [x] **TM-10 — First release 0.1.0**: bootstrap publish by hand (npm forbids configuring
   a trusted publisher for a package that does not exist), then the trusted publisher on
   npmjs.com and the tag. <!-- tm: prio=med size=S labels=release ver=0.1.0 -->

@@ -3,6 +3,26 @@
 // plus what the tools returned and what it all cost.
 import { costOf, priceFor } from './prices.mjs'
 
+// A cache entry lives five minutes, or an hour when it was written with the 1 h TTL.
+const TTL_5M = 5 * 60 * 1000
+const TTL_1H = 60 * 60 * 1000
+
+// Why a warm prefix came back cold. Asked in this order because the earlier ones
+// rewrite more of the prompt: a compaction replaces it, a different model cannot read
+// the other's cache, an expired entry is simply gone, and a tool the session had not
+// used before is the visible half of a tool-set change. `unknown` is counted rather
+// than assigned to the nearest plausible cause — a guess would be worse than a gap.
+export const MISS_CAUSES = ['compaction', 'model switch', 'cache expired', 'new tool', 'unknown']
+
+function causeOf(prev, t, compactionsAt) {
+  if (prev.t !== null && t.t !== null && compactionsAt.some((at) => at > prev.t && at <= t.t)) return 'compaction'
+  if (prev.model && t.model && prev.model !== t.model) return 'model switch'
+  const ttl = prev.write1h > 0 ? TTL_1H : TTL_5M
+  if (prev.t !== null && t.t !== null && t.t - prev.t > ttl) return 'cache expired'
+  if (prev.newTool || t.newTool) return 'new tool'
+  return 'unknown'
+}
+
 export function sessionMetrics(s, custom = {}) {
   let input = 0
   let cacheRead = 0
@@ -15,6 +35,8 @@ export function sessionMetrics(s, custom = {}) {
   let misses = 0
   let modelSwitches = 0
   let prev = null
+  const missCauses = Object.fromEntries(MISS_CAUSES.map((c) => [c, 0]))
+  const compactionsAt = s.compactionsAt ?? []
   for (const t of s.turns) {
     input += t.input
     cacheRead += t.cacheRead
@@ -27,9 +49,12 @@ export function sessionMetrics(s, custom = {}) {
     if (c === null) priced = false
     else cost += c
     // A miss: a prompt that had been mostly cached comes back mostly uncached.
-    if (prev && prev.prompt > 20000 && prev.cacheRead / prev.prompt > 0.5 && prompt > 20000 && t.cacheRead / prompt < 0.1) misses++
+    if (prev && prev.prompt > 20000 && prev.cacheRead / prev.prompt > 0.5 && prompt > 20000 && t.cacheRead / prompt < 0.1) {
+      misses++
+      missCauses[causeOf(prev, t, compactionsAt)]++
+    }
     if (prev && prev.model && t.model && prev.model !== t.model) modelSwitches++
-    prev = { prompt, cacheRead: t.cacheRead, model: t.model }
+    prev = { prompt, cacheRead: t.cacheRead, model: t.model, t: Number.isNaN(t.t) ? null : (t.t ?? null), write1h: t.write1h, newTool: t.newTool === true }
   }
   const promptTotal = input + cacheRead + write5m + write1h
   const toolChars = Object.values(s.tools).reduce((a, t) => a + t.chars, 0)
@@ -57,6 +82,7 @@ export function sessionMetrics(s, custom = {}) {
     peak,
     cacheHitRatio: promptTotal ? cacheRead / promptTotal : null,
     misses,
+    missCauses,
     modelSwitches,
     cost: priced && s.turns.length ? cost : null,
     toolChars,
@@ -71,7 +97,7 @@ export function sessionMetrics(s, custom = {}) {
 const q = (xs, p) => (xs.length ? [...xs].sort((a, b) => a - b)[Math.min(xs.length - 1, Math.max(0, Math.ceil(p * xs.length) - 1))] : null)
 
 export function aggregate(ms) {
-  const a = { sessions: ms.length, noTurns: 0, subagents: ms.filter((m) => m.subagent).length, harnesses: {}, turns: 0, tokens: { input: 0, cacheRead: 0, write5m: 0, write1h: 0, output: 0, total: 0 }, cost: 0, pricedSessions: 0, unpriced: new Set(), peaks: [], misses: 0, modelSwitches: 0, compactions: 0, tools: {}, commands: {}, overCap: 0, phases: {} }
+  const a = { sessions: ms.length, noTurns: 0, missCauses: Object.fromEntries(MISS_CAUSES.map((c) => [c, 0])), subagents: ms.filter((m) => m.subagent).length, harnesses: {}, turns: 0, tokens: { input: 0, cacheRead: 0, write5m: 0, write1h: 0, output: 0, total: 0 }, cost: 0, pricedSessions: 0, unpriced: new Set(), peaks: [], misses: 0, modelSwitches: 0, compactions: 0, tools: {}, commands: {}, overCap: 0, phases: {} }
   for (const m of ms) {
     a.harnesses[m.harness] = (a.harnesses[m.harness] ?? 0) + 1
     a.turns += m.turns
@@ -84,6 +110,7 @@ export function aggregate(ms) {
     if (m.turns) a.peaks.push(m.peak)
     else a.noTurns++
     a.misses += m.misses
+    for (const c of MISS_CAUSES) a.missCauses[c] += m.missCauses?.[c] ?? 0
     a.modelSwitches += m.modelSwitches
     a.compactions += m.compactions
     a.overCap += m.overCap

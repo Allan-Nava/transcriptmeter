@@ -25,7 +25,8 @@ bin/lib/readers/codex.mjs    ~/.codex/sessions/y/m/d/rollout-*.jsonl → the sam
 bin/lib/readers/common.mjs   toolResultText, commandPrefix (first word or two, cd hops skipped)
 bin/lib/discover.mjs      roots, discovery, which reader per root
 bin/lib/args.mjs          the --since parser, pure and tested
-bin/lib/metrics.mjs       sessionMetrics (KPIs, cost, misses, switches) and aggregate
+bin/lib/metrics.mjs       sessionMetrics (KPIs, cost, misses and their causes, switches)
+                          and aggregate; MISS_CAUSES is the order they are asked in
 bin/lib/prices.mjs        the dated list-price table; PRICES_DATE is load-bearing
 bin/lib/render.mjs        the text output; --json bypasses it
 test/                     node:test suites over the committed fixtures in test/fixtures/,
