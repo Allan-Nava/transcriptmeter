@@ -91,9 +91,16 @@ cache_write_input_tokens, output_tokens, reasoning_output_tokens, total_tokens}`
 `response_item` of type `custom_tool_call` (`name: "exec"`, `input` holding
 `exec_command({cmd:"…"})`) and `custom_tool_call_output` (`output`).
 
-**Prices** (platform.claude.com/docs/en/about-claude/pricing, 2026-09-23): in
-`bin/lib/prices.mjs`; cache read 0.1× except Fable 5.1 / Mythos 5.1 0.025× and Opus 5.5
-0.05×; writes 1.25× (5 min) and 2× (1 h).
+**Prices** (2026-09-23), in `bin/lib/prices.mjs`, one row per model with its own
+multipliers:
+
+- Anthropic (platform.claude.com/docs/en/about-claude/pricing): cache read 0.1× except
+  Fable 5.1 / Mythos 5.1 0.025× and Opus 5.5 0.05×; writes 1.25× (5 min) and 2× (1 h).
+- OpenAI (developers.openai.com/api/docs/pricing), as Codex reports the ids: cached input
+  is 0.1× on every row, and **writing a cache entry is free**, so those rows say
+  `write5m: 1, write1h: 1` rather than inheriting Anthropic's. Every Codex
+  `cache_write_input_tokens` seen was 0 (27 of 27 records), and
+  `reasoning_output_tokens` is inside `output_tokens` (9 of 9), so output is priced once.
 
 ## Verifying a change
 

@@ -98,8 +98,11 @@ and one Codex session's with Codex's own `/status`, and the differences explaine
   KPI 3 as the run's tokens, KPI 4 as cache. Both readers take the task id and the phase
   from the first prompt, keeping the identifier and never the prompt.
   <!-- tm: prio=med size=M labels=metrics,enhancement ver=0.2.0 -->
-- [ ] **TM-12 — Codex prices**: a dated table once a citable source exists; until then
-  `--prices`. <!-- tm: prio=low size=S labels=metrics -->
+- [x] **TM-12 — Codex prices**: the source exists — developers.openai.com/api/docs/pricing
+  — so the five ids Codex reports are in the table, dated with the rest. Cached input is
+  0.1× and writing a cache entry is free, so those rows carry their own write multipliers
+  instead of inheriting Anthropic's 1.25×/2×.
+  <!-- tm: prio=low size=S labels=metrics ver=main -->
 - [x] **TM-13 — A weekly trend**: `weeks`, one row per Monday-to-Sunday week in UTC —
   sessions, turns, tokens, cache hit ratio, peak p50, misses and the cause most of them
   were pinned on, cost. Sessions that never reached the API are left out: they have no

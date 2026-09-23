@@ -34,13 +34,14 @@ npx transcriptmeter prices           # the list-price table and its date
 | **Cache hit ratio** — cache read over the whole prompt | same | KPI 4 of the `token-efficiency` skill: over 70% in an implement session, or something in the prefix is moving |
 | Cache misses after a warm prefix, **each one attributed to its cause** — compaction, model switch, cache expired, new tool, or honestly unknown | consecutive responses, `message.model`, `isCompactSummary`, the gap against the TTL the write asked for | each miss is one full re-read at input price; the cause is what you would change |
 | **Peak context** per session, p50 and p95 across sessions | max prompt size over the session | KPI 1: the 40% rule is about this number |
-| Estimated cost at list prices, dated | the price table in `bin/lib/prices.mjs` | what the session would bill on an API key; on a subscription it is the size of what the plan absorbed |
+| Estimated cost at list prices, dated — Anthropic and OpenAI models both | the price table in `bin/lib/prices.mjs`, read off each vendor's own page on the date it carries | what the session would bill on an API key; on a subscription it is the size of what the plan absorbed |
 | Tool results by tool, shell results by command prefix, results over a cap | `tool_result` sizes matched to `tool_use` | where the context went; the input to a trimming policy such as [trimhook](https://github.com/Allan-Nava/trimhook) |
 | The same figures per week, one row each | the session's own end date, bucketed by the Monday in UTC | a change in habits shows as a step; a monthly total hides it |
 | QRSPI phase and `thoughts/<task>`, when the first prompt names them | the first prompt, reduced to a phase name from a closed list and a task id | one session per phase means one row per phase, and `runs` gives the whole task's KPIs |
 
-Unpriced models — every Codex model today — get tokens and a `—` in the cost column, and
-the summary names them. `--prices <file.json>` adds your own `{ "model": { "input", "output", "read" } }`.
+A model the table does not carry gets tokens and a `—` in the cost column, and the summary
+names it. `--prices <file.json>` adds your own `{ "model": { "input", "output", "read" } }`,
+which also overrides a row that ships.
 
 ## One machine, one month
 
@@ -48,13 +49,13 @@ Run on 2026-09-23 over the author's own transcripts, `--since 30d --no-subagents
 only. Not a benchmark of anything but this tool's own output:
 
 ```
-## 1,750 sessions since 30d · claude 1,738, codex 12 · 29,889 API turns · 1,616 opened and never reached the API
-tokens: 12,014,017,818 total — uncached input 182,813 · cache read 11,770,505,599 · cache write 212,034,673 (212,034,673 at 1h) · output 31,294,733
-cache hit ratio 98% · cache misses after a warm prefix 278 (3 compaction · 3 model switch · 222 cache expired · 2 new tool · 48 unknown) · model switches 8 · compactions 35
+## 1,750 sessions since 30d · claude 1,738, codex 12 · 30,151 API turns · 1,616 opened and never reached the API
+tokens: 12,119,278,811 total — uncached input 183,337 · cache read 11,874,122,433 · cache write 213,390,424 (213,390,424 at 1h) · output 31,582,617
+cache hit ratio 98% · cache misses after a warm prefix 279 (3 compaction · 3 model switch · 223 cache expired · 2 new tool · 48 unknown) · model switches 8 · compactions 36
 peak context per session: p50 97,253 · p95 965,951 tokens
-estimated cost $8874.91 at list prices of 2026-09-23 — unpriced models, tokens only: gpt-5.6-terra, gpt-6-luna
-tool results: 27,213,054 characters (≈ 6,803,264 tokens) · 334 results over 8,000 characters · by tool: Bash 24,542,058 · WebFetch 1,073,190 · Read 1,060,871 · Edit 198,282 · Write 97,411 · Agent 54,284
-top shell commands by result size: `sed` 4,553,179 · `echo` 3,025,137 · `grep` 2,556,635 · `python3` 2,404,220 · `cat` 1,962,889 · `for` 1,172,387 · `ssh` 838,162 · `ls` 793,788
+estimated cost $8947.52 at list prices of 2026-09-23
+tool results: 27,405,623 characters (≈ 6,851,406 tokens) · 336 results over 8,000 characters · by tool: Bash 24,729,658 · WebFetch 1,073,756 · Read 1,060,871 · Edit 198,450 · Write 97,888 · Agent 54,284
+top shell commands by result size: `sed` 4,571,619 · `echo` 3,164,530 · `grep` 2,563,592 · `python3` 2,560,783 · `cat` 1,979,832 · `for` 1,187,037 · `ssh` 839,013 · `ls` 802,111
 QRSPI phases seen: Questions 80 · Structure 20
 ```
 
@@ -163,7 +164,6 @@ is how the tests and CI run it against fixtures.
 - Put a number on a session that used an unpriced model. One unpriced response and the
   whole session's cost is `—`: a partial total would read as the total. The tokens are
   still counted, and the summary names the models it could not price.
-- Price Codex models: no public table this tool can cite yet. Tokens are reported.
 - Reconstruct a "task": the unit is the session. With one session per QRSPI phase that is
   exactly the unit you want; in a long free-form session it is not.
 

@@ -5,6 +5,13 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 
 ## [Unreleased]
 
+### Added
+- Codex models are priced. The five ids Codex reports come from OpenAI's own pricing page,
+  dated with the rest of the table, and each carries its own write multipliers because
+  writing a cache entry is free there — inheriting Anthropic's 1.25×/2× would have
+  overcharged it. `estimated cost` no longer says "unpriced models, tokens only" for a
+  Codex session (TM-12).
+
 ## [0.2.0] — 2026-09-23
 
 Three ways of reading the same transcripts that 0.1.0 did not have — a run, a week, and
