@@ -121,6 +121,13 @@ lives here.
   0.2.0 shipped the Codex prices while listing them under [Unreleased]. `check` now
   requires the newest section to be this version, and `check --release`, which the tag
   runs, requires [Unreleased] to be empty. <!-- tm: prio=high size=S labels=release ver=main -->
+- [x] **TM-21 — Badges, and an eye on the action versions**: the README says nothing about
+  the package being on npm or the CI being green, and the six workflows pin action majors
+  that GitHub deprecates on its own schedule — a release that stops happening without
+  anybody touching the repository. Five badges on one HTML line, where `site/build.mjs`
+  drops them instead of making them the page's lede, and Dependabot on the
+  `github-actions` ecosystem only, grouped, monthly. `marked` is left out: it is not in
+  the published tarball. <!-- tm: prio=low size=S labels=project ver=main -->
 - [ ] **TM-17 — The cost figure against the harness's own**: Claude Code's `/cost` and
   Codex's `/status` report a session's cost themselves. Both are interactive, so the
   comparison needs a person to run them on a named session and paste two numbers; record

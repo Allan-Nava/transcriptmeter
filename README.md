@@ -1,5 +1,7 @@
 <p align="center"><img src="https://raw.githubusercontent.com/Allan-Nava/transcriptmeter/main/assets/logo.svg" width="96" height="96" alt="transcriptmeter"></p>
 
+<p align="center"><a href="https://www.npmjs.com/package/transcriptmeter"><img src="https://img.shields.io/npm/v/transcriptmeter?color=7a4b8c&amp;label=npm" alt="npm"></a> <a href="https://github.com/Allan-Nava/transcriptmeter/actions/workflows/ci.yml"><img src="https://github.com/Allan-Nava/transcriptmeter/actions/workflows/ci.yml/badge.svg" alt="CI"></a> <a href="https://github.com/Allan-Nava/transcriptmeter/actions/workflows/release.yml"><img src="https://github.com/Allan-Nava/transcriptmeter/actions/workflows/release.yml/badge.svg" alt="Release"></a> <a href="https://nodejs.org"><img src="https://img.shields.io/node/v/transcriptmeter?color=7a4b8c&amp;label=node" alt="node"></a> <a href="LICENSE"><img src="https://img.shields.io/npm/l/transcriptmeter?color=7a4b8c" alt="MIT"></a></p>
+
 # transcriptmeter — what your agent sessions cost, from the transcripts on your disk
 
 Claude Code writes every session to `~/.claude/projects/<project>/<session>.jsonl` with the
@@ -11,16 +13,16 @@ leaves the machine; it keeps **sizes and identifiers only** and never shows mess
 or a command beyond its first word or two.
 
 ```
-npx transcriptmeter                  # totals across sessions, both harnesses
-npx transcriptmeter sessions --since 7d
-npx transcriptmeter session <file or id>
-npx transcriptmeter tools --cap 8000
-npx transcriptmeter weeks --since 8w    # one row per week
-npx transcriptmeter runs                # one table per thoughts/<task> run, by phase
-npx transcriptmeter prices           # the list-price table and its date
+npx transcriptmeter                       # totals across sessions, both harnesses
+npx transcriptmeter sessions --since 7d   # one row per session
+npx transcriptmeter session <file or id>  # one session in detail
+npx transcriptmeter tools --cap 8000      # what the tools returned, by tool and command
+npx transcriptmeter runs                  # one table per thoughts/<task> run, by phase
+npx transcriptmeter weeks --since 8w      # one row per week
+npx transcriptmeter prices                # the list-price table and its date
 ```
 
-> **Status: 0.2.0, measured and cross-checked on one machine.** The readers follow the
+> **Status: 0.2.0, on npm, measured and cross-checked on one machine.** The readers follow the
 > field shapes of Claude Code 2.1.280 and Codex CLI 0.155.1 as read on 2026-09-23. The
 > deduplication rule that makes the Claude Code numbers right — one API response is
 > written as several lines with the same `requestId` — is the kind of fact this tool
