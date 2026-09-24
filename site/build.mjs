@@ -24,8 +24,22 @@ const md = readFileSync(join(ROOT, 'README.md'), 'utf8')
 // One logo, three consumers: the favicon (inlined), the header, the hero.
 const logo = readFileSync(join(ROOT, 'assets', 'logo.svg'), 'utf8')
 const favicon = `data:image/svg+xml,${encodeURIComponent(logo.replace(/\n\s*/g, '').replace(/<title>.*?<\/title>/, ''))}`
-// The file's own width/height go, or the inlined tag carries two of each.
-const mark = (size, cls) => logo.replace(/\s(?:width|height)="\d+"/g, '').replace('<svg', `<svg class="${cls}" width="${size}" height="${size}"`)
+// The <svg> tag's own width/height go, or the inlined tag carries two of each — and
+// only that tag's: the same attributes on the five <rect>s are the logo. Stripping them
+// from the whole file collapsed every bar and left the page showing the needle alone.
+const mark = (size, cls) =>
+  logo.replace(/<svg\b[^>]*>/, (tag) => tag.replace(/\s(?:width|height)="[^"]*"/g, '').replace('<svg', `<svg class="${cls}" width="${size}" height="${size}"`))
+
+// The build refuses to emit a logo it has taken apart. A page that ships a blank mark
+// looks fine to every test that reads text.
+{
+  const shapes = (s) => (s.match(/<(?:rect|circle|path)\b[^>]*>/g) ?? []).join('')
+  const dims = (s) => (shapes(s).match(/\s(?:width|height|r|d)="/g) ?? []).length
+  const got = mark(22, 'x')
+  if (dims(got) !== dims(logo) || !/<svg[^>]*\swidth="22"/.test(got)) {
+    throw new Error(`site/build.mjs: inlining the logo lost part of it — ${dims(logo)} shape dimensions became ${dims(got)}`)
+  }
+}
 
 marked.setOptions({ mangle: false, headerIds: false })
 
