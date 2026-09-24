@@ -5,6 +5,13 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 
 ## [Unreleased]
 
+### Fixed
+- The site served a blank logo. Removing the `<svg>` tag's own width and height, so the
+  inlined mark would not carry two of each, was done over the whole file — which emptied
+  the five `<rect>`s that are the logo, leaving the header and the hero showing the
+  needle alone. The strip is scoped to the opening tag, and the build now refuses to emit
+  a mark whose shapes have lost their dimensions (TM-22).
+
 ### Added
 - README badges — npm version, CI, release, the Node floor and the licence — on one HTML
   line, so `site/build.mjs` drops them the way it drops the logo rather than making them

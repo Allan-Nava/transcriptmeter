@@ -128,6 +128,12 @@ lives here.
   drops them instead of making them the page's lede, and Dependabot on the
   `github-actions` ecosystem only, grouped, monthly. `marked` is left out: it is not in
   the published tarball. <!-- tm: prio=low size=S labels=project ver=main -->
+- [x] **TM-22 — The site was serving a blank logo**: TM-14 removed the `<svg>` tag's own
+  width and height so the inlined mark would not carry two of each, but the regex ran over
+  the whole file and emptied the five `<rect>`s that are the logo. The page shipped the
+  needle alone, in the header and the hero, and nothing noticed for a day: every check
+  reads text. The strip is scoped to the opening tag, and the build now refuses to emit a
+  mark whose shapes lost their dimensions. <!-- tm: prio=high size=S labels=project ver=main -->
 - [ ] **TM-17 — The cost figure against the harness's own**: Claude Code's `/cost` and
   Codex's `/status` report a session's cost themselves. Both are interactive, so the
   comparison needs a person to run them on a named session and paste two numbers; record
