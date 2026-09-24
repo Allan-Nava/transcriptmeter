@@ -6,6 +6,14 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 ## [Unreleased]
 
 ### Added
+- README badges — npm version, CI, release, the Node floor and the licence — on one HTML
+  line, so `site/build.mjs` drops them the way it drops the logo rather than making them
+  the generated page's lede and meta description. The command list gained `runs` and a
+  one-line comment each, in one column (TM-21).
+- Dependabot, on the `github-actions` ecosystem only, grouped into one pull request a
+  month. Action majors go stale on GitHub's schedule, and `release.yml` breaking is a
+  release that silently does not happen; `marked` is left out because it is not in the
+  published tarball, and the pinned `npm` in `release.yml` stays a deliberate bump (TM-21).
 - `check` reads the CHANGELOG instead of only looking for a heading: the newest released
   section must be `package.json`'s version, and `check --release` — which `release.yml`
   now runs on the tagged tree — additionally requires `[Unreleased]` to be empty, because

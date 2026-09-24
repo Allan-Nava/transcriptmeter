@@ -1,0 +1,26 @@
+# GitHub Actions only, on purpose.
+#
+# This repository has no runtime dependencies and one devDependency — `marked`, which
+# builds the site and is not in the published tarball. What does go stale on its own is
+# the action versions: a major that GitHub deprecates breaks a workflow without anybody
+# touching the repository, and `release.yml` breaking is a release that silently does
+# not happen.
+#
+# One grouped pull request a month, not eight: the CI here — four Node versions, the
+# fixture check, `pack`, CodeQL — is strong enough to say whether a bump is safe, and a
+# single maintainer reading one PR is a signal where eight are noise.
+#
+# `npm install -g npm@11.19.0` in release.yml is pinned deliberately and is not managed
+# here; bump it by hand, with a reason.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ['*']
+    commit-message:
+      prefix: 'ci'
+    labels: ['project']
