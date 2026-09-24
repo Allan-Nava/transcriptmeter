@@ -63,11 +63,14 @@ const misses = [
 ]
 mkdirSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app'), { recursive: true })
 writeFileSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app', 'sess-claude-3.jsonl'), j(misses))
-const sub = [{ ...base('assistant', 50, { message: { role: 'assistant', model: 'claude-haiku-4-5-20251001', usage: usage(2000, 0, 0, 0, 300), content: [{ type: 'text', text: 'sub' }] } }), sessionId: 'agent-1', isSidechain: true }]
+// A subagent lives under the session that spawned it, writes that session's id — not
+// one of its own — and carries `agentId`, which is its only unique identity.
+const sub = [{ ...base('assistant', 50, { message: { role: 'assistant', model: 'claude-haiku-4-5-20251001', usage: usage(2000, 0, 0, 0, 300), content: [{ type: 'text', text: 'sub' }] } }), sessionId: 'sess-claude-1', isSidechain: true, agentId: 'a1', promptId: 'p1', entrypoint: 'claude-desktop', userType: 'external' }]
 mkdirSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app'), { recursive: true })
 writeFileSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app', 'sess-claude-1.jsonl'), j(claude))
 writeFileSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app', 'sess-claude-2.jsonl'), j(claude2))
-writeFileSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app', 'agent-1.jsonl'), j(sub))
+mkdirSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app', 'sess-claude-1', 'subagents'), { recursive: true })
+writeFileSync(join(HERE, 'fixtures', 'claude', '-Users-dev-app', 'sess-claude-1', 'subagents', 'agent-a1.jsonl'), j(sub))
 const codex = [
   { timestamp: ts(200), type: 'session_meta', payload: { session_id: 'sess-codex-1', id: 'sess-codex-1', timestamp: ts(200), cwd: '/Users/dev/app', cli_version: '0.155.1', model_provider: 'openai', originator: 'codex_exec' } },
   { timestamp: ts(200), type: 'world_state', payload: { state: { collaboration_mode: { mode: 'default', model: 'gpt-6-luna' } } } },

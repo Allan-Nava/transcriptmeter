@@ -64,6 +64,7 @@ export function sessionMetrics(s, custom = {}) {
     file: s.file,
     project: s.project,
     subagent: s.subagent,
+    parent: s.parent ?? null,
     phase: s.phase,
     task: s.task ?? null,
     start: s.start,

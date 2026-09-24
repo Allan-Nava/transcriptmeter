@@ -66,7 +66,7 @@ test('the Claude Code reader: turns, cache classes, tools, commands, phase, suba
   const ss = loadSessions([CLAUDE])
   assert.equal(kindOf(CLAUDE), 'claude')
   const ms = ss.map((s) => sessionMetrics(s)).sort((a, b) => (a.id ?? '').localeCompare(b.id ?? ''))
-  assert.deepEqual(ms.map((m) => m.id), ['agent-1', 'sess-claude-1', 'sess-claude-2', 'sess-claude-3'])
+  assert.deepEqual(ms.map((m) => m.id), ['a1', 'sess-claude-1', 'sess-claude-2', 'sess-claude-3'], 'the subagent is its agentId, not the id it writes')
   const s1 = ms[1]
   assert.equal(s1.turns, 3)
   assert.equal(s1.phase, 'Research')
@@ -84,6 +84,7 @@ test('the Claude Code reader: turns, cache classes, tools, commands, phase, suba
   assert.ok(s1.cost > 0)
   assert.equal(s1.userMessages, 2, 'the two people-written turns; the task notification is not one')
   assert.equal(ms[0].subagent, true)
+  assert.equal(ms[0].parent, 'sess-claude-1', 'and it says whose it is')
   assert.equal(ms[2].cost, null, 'unknown model: tokens but no dollars')
   assert.equal(ms[2].write1h, 500)
 })
@@ -171,6 +172,22 @@ test('--cap is the cap that is counted, not just the one printed', () => {
 
 // A week that moves with the reader's timezone is not a week anybody can compare, so
 // the boundary is Monday in UTC and the label is that Monday.
+// A subagent writes the spawning session's id, so parent and children all reported the
+// same one: six rows under one id in `sessions`, and `session <id>` could answer with a
+// five-turn child instead of the session that was asked about.
+test('a subagent has its own id, names its parent, and is rolled up into it', () => {
+  const ms = loadSessions([CLAUDE]).map((s) => sessionMetrics(s))
+  const ids = ms.map((m) => m.id)
+  assert.equal(new Set(ids).size, ids.length, 'every session file has an id of its own')
+  const parent = ms.find((m) => m.id === 'sess-claude-1')
+  const spawned = ms.filter((m) => m.parent === parent.id)
+  assert.equal(spawned.length, 1)
+  assert.match(renderSession(parent, spawned), /spawned 1 subagent: 1 turn ·/)
+  assert.match(renderSession(parent, spawned), /with them this session cost/)
+  assert.doesNotMatch(renderSession(parent), /spawned/, 'nothing is claimed when nothing was spawned')
+  assert.match(renderSessions(spawned), /sub of sess-cla/)
+})
+
 test('weeks: Monday in UTC, one row each, and nothing to trend is said rather than drawn', () => {
   assert.equal(weekOf(Date.parse('2026-09-23T13:00:00Z')), '2026-09-21', 'a Wednesday')
   assert.equal(weekOf(Date.parse('2026-09-21T00:00:00Z')), '2026-09-21', 'the Monday itself')
@@ -208,6 +225,10 @@ test('CLI: summary, sessions, session, tools, --json, --since, --harness, --no-s
   assert.equal(JSON.parse(run('sessions', '--json', '--harness', 'codex').stdout).length, 1)
   assert.equal(JSON.parse(run('sessions', '--json', '--since', '2030-01-01').stdout).length, 0)
   assert.match(run('session', 'sess-codex-1').stdout, /codex session sess-codex-1/)
+  // The parent, not the child that writes the same id.
+  const asked = run('session', 'sess-claude-1').stdout
+  assert.match(asked, /3 API turns/)
+  assert.match(asked, /spawned 1 subagent/)
   assert.equal(run('session', 'nope').status, 1)
   assert.match(run('tools').stdout, /Top shell commands/)
   assert.equal(JSON.parse(run('runs', '--json').stdout).length, 1)

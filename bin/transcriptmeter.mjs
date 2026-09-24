@@ -68,12 +68,16 @@ async function main() {
   ms.sort((a, b) => (a.start ?? 0) - (b.start ?? 0))
   if (cmd === 'session') {
     const key = positional[1]
-    const m = ms.find((x) => x.file === resolve(key ?? '') || x.id === key || (key && x.file.includes(key)))
+    // A parent wins an ambiguous key: its subagents write the id it writes, and a
+    // five-turn child is not the answer to "what did this session cost".
+    const matches = ms.filter((x) => x.file === resolve(key ?? '') || x.id === key || (key && x.file.includes(key)))
+    const m = matches.find((x) => !x.subagent) ?? matches[0]
     if (!m) {
       console.error(`transcriptmeter: no session matches ${key}`)
       process.exit(1)
     }
-    return console.log(flag('--json') ? JSON.stringify(m, null, 2) : renderSession(m))
+    const spawned = m.subagent ? [] : ms.filter((x) => x.subagent && x.parent === m.id)
+    return console.log(flag('--json') ? JSON.stringify({ ...m, subagents: spawned }, null, 2) : renderSession(m, spawned))
   }
   if (cmd === 'runs') {
     const r = runs(ms)

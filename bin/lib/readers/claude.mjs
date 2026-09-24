@@ -5,6 +5,11 @@ import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
 import { commandPrefix, isMachineTurn, phaseOf, taskOf, toolResultText } from './common.mjs'
 
+// A session file is named after its session. A resumed one continues in a new file and
+// keeps writing the original's id, so the id inside is not unique — 1 file in 1,754
+// (2026-09-24) — while the name the harness gave it always is.
+const FILE_ID = /^[0-9a-f-]{36}$/
+
 
 export function readClaudeSession(file, cap = 8000) {
   let lines
@@ -20,6 +25,7 @@ export function readClaudeSession(file, cap = 8000) {
     project: null,
     version: null,
     subagent: basename(file).startsWith('agent-'),
+    parent: null, // the session that spawned it: a subagent writes the spawner's sessionId
     start: null,
     end: null,
     models: {},
@@ -49,7 +55,13 @@ export function readClaudeSession(file, cap = 8000) {
     } catch {
       continue
     }
-    if (e.sessionId && !s.id) s.id = e.sessionId
+    // A subagent's `sessionId` is the session that spawned it, not its own identity —
+    // parent and children all report the same one, so one id was six rows in `sessions`
+    // and `session <id>` could answer with a five-turn child. Its own identity is
+    // `agentId` (2026-09-24: ~/.claude/projects/<slug>/<session>/subagents/agent-*.jsonl).
+    if (e.sessionId && !s.parent && s.subagent) s.parent = e.sessionId
+    if (e.agentId && s.subagent) s.id ??= e.agentId
+    if (e.sessionId && !s.id && !s.subagent) s.id = FILE_ID.test(basename(file, '.jsonl')) ? basename(file, '.jsonl') : e.sessionId
     if (e.cwd && !s.project) s.project = e.cwd
     if (e.version && !s.version) s.version = e.version
     if (e.isSidechain) s.subagent = true
@@ -127,5 +139,7 @@ export function readClaudeSession(file, cap = 8000) {
     }
   }
   if (!s.turns.length && !s.userMessages) return null
+  // An older subagent file carries no agentId; its filename is the only identity it has.
+  if (s.subagent && !s.id) s.id = basename(file).replace(/\.jsonl$/, '')
   return s
 }

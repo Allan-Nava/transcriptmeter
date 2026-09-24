@@ -32,11 +32,11 @@ export function renderSummary(a, { since, cap = 8000 } = {}) {
 }
 
 export function renderSessions(ms) {
-  const rows = ms.map((m) => [day(m.start), m.harness, base(m.project) + (m.subagent ? ' (sub)' : ''), m.models.map((x) => x.replace(/^claude-/, '')).join('+') || '—', k(m.turns), k(m.peak), pct(m.cacheHitRatio), k(m.output), usd(m.cost), m.phase ?? ''])
+  const rows = ms.map((m) => [day(m.start), m.harness, base(m.project) + (m.subagent ? ` (sub of ${String(m.parent ?? '?').slice(0, 8)})` : ''), m.models.map((x) => x.replace(/^claude-/, '')).join('+') || '—', k(m.turns), k(m.peak), pct(m.cacheHitRatio), k(m.output), usd(m.cost), m.phase ?? ''])
   return table(['date', 'harness', 'project', 'model', 'turns', 'peak ctx', 'cache', 'output', 'cost', 'phase'], rows)
 }
 
-export function renderSession(m) {
+export function renderSession(m, subagents = []) {
   const tools = Object.entries(m.tools).sort((x, y) => y[1].chars - x[1].chars)
   const top = Object.entries(m.commands).sort((x, y) => y[1] - x[1]).slice(0, 8)
   return [
@@ -48,7 +48,17 @@ export function renderSession(m) {
     `estimated cost ${usd(m.cost)}`,
     `tool results ${k(m.toolChars)} characters · over the cap: ${k(m.overCap)}${tools.length ? ` · ${tools.map(([t, v]) => `${t} ${k(v.chars)} (${v.n})`).join(' · ')}` : ''}`,
     top.length ? `top shell commands by result size: ${top.map(([c, n]) => `\`${c}\` ${k(n)}`).join(' · ')}` : '',
+    // What a session spawned is part of what it cost, and it lives in other files.
+    subagents.length ? rollup(m, subagents) : '',
   ].filter(Boolean).join('\n')
+}
+
+function rollup(m, subs) {
+  const turns = subs.reduce((a, s) => a + s.turns, 0)
+  const tokens = subs.reduce((a, s) => a + s.total, 0)
+  const priced = m.cost !== null && subs.every((s) => s.cost !== null)
+  const theirs = priced ? subs.reduce((a, s) => a + s.cost, 0) : null
+  return `spawned ${k(subs.length)} subagent${subs.length > 1 ? 's' : ''}: ${k(turns)} turn${turns === 1 ? '' : 's'} · ${k(tokens)} tokens · ${usd(theirs)} — with them this session cost ${usd(priced ? m.cost + theirs : null)}`
 }
 
 // A trend is only readable if every row is the same shape: one line per week, the

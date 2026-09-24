@@ -5,7 +5,18 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 
 ## [Unreleased]
 
+### Added
+- A session's report ends on what it spawned: `spawned 5 subagents: 24 turns · 1,296,041
+  tokens · $2.51 — with them this session cost $163.83`. `sessions` names each subagent's
+  parent, and `session --json` carries them (TM-23).
+
 ### Fixed
+- A subagent wrote the spawning session's `sessionId`, so a parent and its children all
+  reported the same id — one session here was six rows under one id, another thirty — and
+  `session <id>` could answer with a five-turn child instead of the session asked about.
+  A subagent is its `agentId` now and names its parent; a parent wins an ambiguous key;
+  and a resumed session, which keeps writing the original's id in a new file, takes its
+  identity from the file name (TM-23).
 - The site served a blank logo. Removing the `<svg>` tag's own width and height, so the
   inlined mark would not carry two of each, was done over the whole file — which emptied
   the five `<rect>`s that are the logo, leaving the header and the hero showing the
