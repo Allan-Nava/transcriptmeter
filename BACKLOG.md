@@ -134,6 +134,13 @@ lives here.
   needle alone, in the header and the hero, and nothing noticed for a day: every check
   reads text. The strip is scoped to the opening tag, and the build now refuses to emit a
   mark whose shapes lost their dimensions. <!-- tm: prio=high size=S labels=project ver=main -->
+- [x] **TM-23 — A subagent is not its parent**: a subagent writes the spawning session's
+  `sessionId`, so parent and children all reported the same id — one session on this
+  machine was six rows under one id, another thirty — and `session <id>` could answer with
+  a five-turn child. A subagent is its `agentId` now, names its `parent`, and a parent's
+  report ends on what it spawned and what the two cost together. The documented location
+  was wrong too: they live in `<session-id>/subagents/`, not the project directory.
+  <!-- tm: prio=high size=M labels=reader,metrics ver=main -->
 - [ ] **TM-17 — The cost figure against the harness's own**: Claude Code's `/cost` and
   Codex's `/status` report a session's cost themselves. Both are interactive, so the
   comparison needs a person to run them on a named session and paste two numbers; record
