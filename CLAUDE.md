@@ -48,7 +48,7 @@ site/build.mjs            generates site/dist/index.html FROM README.md
 assets/                   logo.svg (single source: favicon, header, hero, README),
                           logo-mono.svg, social-preview.html and the PNG rendered from it
                           with headless Chrome — the site emits og:image only if it exists
-BACKLOG.md / ROADMAP.md   source of truth / generated view; scripts/backlog.mjs
+BACKLOG.md / ROADMAP.md   source of truth / generated view; backlogsync (package.json#backlogsync)
 ```
 
 ## The rules the code encodes
