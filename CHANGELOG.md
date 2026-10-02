@@ -5,6 +5,12 @@ versions follow [SemVer](https://semver.org/). Items reference their `TM-n` back
 
 ## [Unreleased]
 
+### Changed
+- The backlog check, the roadmap, the issue sync and the release-drift check are
+  [backlogsync](https://github.com/Allan-Nava/backlogsync) 0.1.0, configured in
+  `package.json#backlogsync`; `scripts/backlog.mjs`, its test and fixtures are gone, and
+  `npm run roadmap` regenerates `ROADMAP.md` (TM-24).
+
 ### Added
 - A session's report ends on what it spawned: `spawned 5 subagents: 24 turns · 1,296,041
   tokens · $2.51 — with them this session cost $163.83`. `sessions` names each subagent's

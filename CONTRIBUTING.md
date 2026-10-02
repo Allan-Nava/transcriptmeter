@@ -28,7 +28,10 @@ reported as unpriced, never estimated.
 
 `BACKLOG.md` is the single source of truth; `ROADMAP.md` is generated from it and the
 GitHub issues are synced from it one way on push to `main`. Items carry a stable `TM-n`
-id and a trailing `<!-- tm: prio= size= labels= [ver=] -->` comment.
+id and a trailing `<!-- tm: prio= size= labels= [ver=] -->` comment. The check, the roadmap
+and the sync are [backlogsync](https://github.com/Allan-Nava/backlogsync), configured in
+`package.json#backlogsync` and pinned to its release in `package.json` (`backlogsync@0.1.0`)
+and the workflows (`@backlogsync--v0.1.0`); bump them together.
 
 ## Pull requests
 

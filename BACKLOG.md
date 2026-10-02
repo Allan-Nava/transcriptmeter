@@ -4,7 +4,7 @@ Single source of truth for what is planned. Items keep a stable `TM-n` id so com
 the CHANGELOG, the `thoughts/` artifacts and the issues can reference them.
 
 [ROADMAP.md](ROADMAP.md) is a **generated** view of this file — run
-`node scripts/backlog.mjs roadmap` after touching it, or CI fails. The GitHub issues are
+`npm run roadmap` (backlogsync) after touching it, or CI fails. The GitHub issues are
 synced from it one way on every push to `main` that changes this file.
 
 ## How to write an item
@@ -141,6 +141,13 @@ lives here.
   report ends on what it spawned and what the two cost together. The documented location
   was wrong too: they live in `<session-id>/subagents/`, not the project directory.
   <!-- tm: prio=high size=M labels=reader,metrics ver=main -->
+- [x] **TM-24 — The backlog tooling is backlogsync's**: `scripts/backlog.mjs` was one of
+  seven diverged copies of the same script — this one wrote "Source of trutm" into every
+  issue footer. Replace it, its test and fixtures with backlogsync 0.1.0: the CI `backlog`
+  job and `backlog-issues.yml` through its action, `release-drift.yml` through its reusable
+  workflow, `npm run backlog` / `npm run roadmap` through `npx backlogsync@0.1.0`, the label
+  set kept. Done 2026-10-02 (backlogsync BS-13).
+  <!-- tm: prio=med size=S labels=project ver=main -->
 - [ ] **TM-17 — The cost figure against the harness's own**: Claude Code's `/cost` and
   Codex's `/status` report a session's cost themselves. Both are interactive, so the
   comparison needs a person to run them on a named session and paste two numbers; record
