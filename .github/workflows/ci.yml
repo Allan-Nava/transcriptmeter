@@ -67,6 +67,6 @@ jobs:
           node-version: 24
       # backlogsync, pinned to its release: a malformed item or a stale roadmap fails
       # here; the planner's own tests live in backlogsync (TM-24).
-      - uses: Allan-Nava/backlogsync@backlogsync--v0.1.0
+      - uses: Allan-Nava/backlogsync@backlogsync--v0.1.1
         with:
           command: check

@@ -22,4 +22,4 @@ jobs:
   # The check lives in backlogsync, shared by every repository that releases by tag
   # (TM-24): the tag is transcriptmeter--v<version>.
   drift:
-    uses: Allan-Nava/backlogsync/.github/workflows/release-drift.yml@backlogsync--v0.1.0
+    uses: Allan-Nava/backlogsync/.github/workflows/release-drift.yml@backlogsync--v0.1.1
